@@ -1,449 +1,78 @@
-<!DOCTYPE html>
-<html lang="ru" class="h-full bg-slate-50">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Учет коммунальных платежей и налогов</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Vue 3 Options/Composition API script -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Chart.js for data visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- FontAwesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
-</head>
-<body class="h-full text-slate-800">
-    <div id="app" class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-indigo-600 p-2 rounded-lg text-white">
-                        <i class="fa-solid me-1 fa-file-invoice-dollar text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-lg leading-tight">КоммунУчет EUR</h1>
-                        <p class="text-xs text-slate-400">Учет платежей, электроэнергии и налогов</p>
-                    </div>
-                </div>
-
-                <!-- Action Toolbar -->
-                <div class="flex items-center space-x-2">
-                    <button @click="openModal('add')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center shadow-sm">
-                        <i class="fa-solid fa-plus mr-1.5"></i>
-                        <span>Добавить запись</span>
-                    </button>
-                    <div class="relative">
-                        <button @click="showMenu = !showMenu" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-lg text-sm transition border border-slate-700">
-                            <i class="fa-solid fa-ellipsis-vertical px-1"></i>
-                        </button>
-                        <div v-if="showMenu" @click.away="showMenu = false" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-slate-700 z-40 border border-slate-100">
-                            <button @click="exportJSON" class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center">
-                                <i class="fa-solid fa-download mr-2 text-slate-400"></i> Экспорт (JSON)
-                            </button>
-                            <label class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center cursor-pointer">
-                                <i class="fa-solid fa-upload mr-2 text-slate-400"></i> Импорт (JSON)
-                                <input type="file" @change="importJSON" accept=".json" class="hidden">
-                            </label>
-                            <hr class="my-1 border-slate-100">
-                            <button @click="confirmClear" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center">
-                                <i class="fa-solid fa-trash mr-2 text-red-400"></i> Сбросить данные
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-            
-            <!-- Dashboard Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Total Spent -->
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Всего за месяц</span>
-                        <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fa-solid fa-calendar-days"></i></span>
-                    </div>
-                    <div class="mt-2 flex items-baseline">
-                        <span class="text-2xl font-bold text-slate-900">€ {{ stats.thisMonthTotal.toFixed(2) }}</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1">Расходы за текущий месяц</p>
-                </div>
-
-                <!-- Electricity Card -->
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Электричество</span>
-                        <span class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i class="fa-solid fa-bolt"></i></span>
-                    </div>
-                    <div class="mt-2 flex items-baseline">
-                        <span class="text-2xl font-bold text-slate-900">€ {{ stats.electricityTotal.toFixed(2) }}</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1">3 тарифа (Пик / День / Ночь)</p>
-                </div>
-
-                <!-- Water Card -->
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-sky-600 uppercase tracking-wider">Вода</span>
-                        <span class="p-2 bg-sky-50 text-sky-600 rounded-lg"><i class="fa-solid fa-droplet"></i></span>
-                    </div>
-                    <div class="mt-2 flex items-baseline">
-                        <span class="text-2xl font-bold text-slate-900">€ {{ stats.waterTotal.toFixed(2) }}</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1">Потребление и водоотведение</p>
-                </div>
-
-                <!-- Taxes Card -->
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Налоги</span>
-                        <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i class="fa-solid fa-building-columns"></i></span>
-                    </div>
-                    <div class="mt-2 flex items-baseline">
-                        <span class="text-2xl font-bold text-slate-900">€ {{ stats.taxesTotal.toFixed(2) }}</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1">Недвижимость и такса смет</p>
-                </div>
-            </div>
-
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-800 mb-4 flex items-center">
-                        <i class="fa-solid fa-chart-line text-indigo-500 mr-2"></i> Динамика расходов по категориям (€)
-                    </h2>
-                    <div class="h-64">
-                        <canvas id="expensesChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
-                    <h2 class="text-base font-semibold text-slate-800 mb-4 flex items-center">
-                        <i class="fa-solid fa-chart-pie text-indigo-500 mr-2"></i> Доли расходов
-                    </h2>
-                    <div class="h-64 flex items-center justify-center">
-                        <canvas id="pieChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter & Search Bar -->
-            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
-                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    <!-- Category Filter -->
-                    <select v-model="filters.category" class="bg-slate-50 border border-slate-300 text-slate-700 text-sm rounded-lg p-2.5 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="all">Все категории</option>
-                        <option value="electricity">Электроэнергия</option>
-                        <option value="water">Водоснабжение</option>
-                        <option value="property_tax">Налог на недвижимость</option>
-                        <option value="garbage_tax">Налог на мусор (Такса смет)</option>
-                    </select>
-
-                    <!-- Date Filter -->
-                    <input type="month" v-model="filters.month" class="bg-slate-50 border border-slate-300 text-slate-700 text-sm rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    <button v-if="filters.month || filters.category !== 'all' || filters.search" @click="resetFilters" class="text-xs text-indigo-600 hover:text-indigo-800 px-2 font-medium">
-                        Сбросить фильтры
-                    </button>
-                </div>
-
-                <!-- Search Input -->
-                <div class="relative w-full md:w-64">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
-                    </div>
-                    <input type="text" v-model="filters.search" placeholder="Поиск по заметкам..." class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg block w-full pl-9 p-2.5 focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-            </div>
-
-            <!-- Records List / Table -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <h3 class="font-semibold text-slate-800">История платежей и показаний</h3>
-                    <span class="text-xs text-slate-500">Всего записей: {{ filteredRecords.length }}</span>
-                </div>
-
-                <div v-if="filteredRecords.length === 0" class="text-center py-12 px-4">
-                    <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3"></i>
-                    <p class="text-slate-500 text-sm">Записи не найдены. Нажмите кнопку "Добавить запись", чтобы внести показания.</p>
-                </div>
-
-                <div v-else class="divide-y divide-slate-100">
-                    <div v-for="record in filteredRecords" :key="record.id" class="p-4 sm:p-6 hover:bg-slate-50/80 transition flex flex-col md:flex-row justify-between gap-4">
-                        
-                        <!-- Main Record Information -->
-                        <div class="flex items-start space-x-4">
-                            <div class="p-3 rounded-xl flex-shrink-0" :class="getCategoryBadgeClass(record.category)">
-                                <i :class="getCategoryIcon(record.category)" class="text-xl"></i>
-                            </div>
-
-                            <div class="space-y-1">
-                                <div class="flex items-center space-x-2">
-                                    <span class="font-bold text-slate-900">{{ getCategoryTitle(record.category) }}</span>
-                                    <span class="text-xs text-slate-500 px-2 py-0.5 bg-slate-100 rounded-full">
-                                        <i class="fa-regular fa-calendar mr-1"></i>{{ formatDate(record.date) }}
-                                    </span>
-                                </div>
-
+<!-- ... existing code ... -->
                                 <!-- Details depending on category -->
                                 <div class="text-xs text-slate-600 space-y-1">
                                     <!-- Electricity Details -->
                                     <template v-if="record.category === 'electricity'">
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-2">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-amber-50/60 p-2.5 rounded-lg border border-amber-100 mt-2">
                                             <div>
-                                                <span class="font-medium text-amber-700">Т1 (Пиковый/День):</span> 
-                                                <span>{{ record.electricity.t1_new - record.electricity.t1_old }} кВт⋅ч</span>
-                                                <div class="text-[10px] text-slate-400">({{ record.electricity.t1_old }} → {{ record.electricity.t1_new }})</div>
+                                                <div class="font-bold text-amber-800">Т1 (Пиковый/День):</div>
+                                                <div>{{ (record.electricity.t1_new - record.electricity.t1_old) }} кВт⋅ч</div>
+                                                <div class="text-[10px] text-slate-500">({{ record.electricity.t1_old }} → {{ record.electricity.t1_new }})</div>
+                                                <div class="text-[11px] font-semibold text-slate-700">€ {{ ((record.electricity.t1_new - record.electricity.t1_old) * (record.electricity.t1_rate || 0)).toFixed(2) }} <span class="text-[9px] font-normal text-slate-400">(по €{{ record.electricity.t1_rate }}/кВт)</span></div>
                                             </div>
                                             <div>
-                                                <span class="font-medium text-amber-700">Т2 (Ночной):</span> 
-                                                <span>{{ record.electricity.t2_new - record.electricity.t2_old }} кВт⋅ч</span>
-                                                <div class="text-[10px] text-slate-400">({{ record.electricity.t2_old }} → {{ record.electricity.t2_new }})</div>
+                                                <div class="font-bold text-amber-800">Т2 (Ночной):</div>
+                                                <div>{{ (record.electricity.t2_new - record.electricity.t2_old) }} кВт⋅ч</div>
+                                                <div class="text-[10px] text-slate-500">({{ record.electricity.t2_old }} → {{ record.electricity.t2_new }})</div>
+                                                <div class="text-[11px] font-semibold text-slate-700">€ {{ ((record.electricity.t2_new - record.electricity.t2_old) * (record.electricity.t2_rate || 0)).toFixed(2) }} <span class="text-[9px] font-normal text-slate-400">(по €{{ record.electricity.t2_rate }}/кВт)</span></div>
                                             </div>
                                             <div>
-                                                <span class="font-medium text-amber-700">Т3 (Полупик/Дневной 2):</span> 
-                                                <span>{{ record.electricity.t3_new - record.electricity.t3_old }} кВт⋅ч</span>
-                                                <div class="text-[10px] text-slate-400">({{ record.electricity.t3_old }} → {{ record.electricity.t3_new }})</div>
+                                                <div class="font-bold text-amber-800">Т3 (Полупик/Дневной 2):</div>
+                                                <div>{{ (record.electricity.t3_new - record.electricity.t3_old) }} кВт⋅ч</div>
+                                                <div class="text-[10px] text-slate-500">({{ record.electricity.t3_old }} → {{ record.electricity.t3_new }})</div>
+                                                <div class="text-[11px] font-semibold text-slate-700">€ {{ ((record.electricity.t3_new - record.electricity.t3_old) * (record.electricity.t3_rate || 0)).toFixed(2) }} <span class="text-[9px] font-normal text-slate-400">(по €{{ record.electricity.t3_rate }}/кВт)</span></div>
                                             </div>
                                         </div>
                                     </template>
 
                                     <!-- Water Details -->
-                                    <template v-if="record.category === 'water'">
-                                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 mt-2">
-                                            <span class="font-medium text-sky-700">Расход воды:</span> 
-                                            <span>{{ record.water.new_reading - record.water.old_reading }} m³</span>
-                                            <span class="text-slate-400 ml-2">({{ record.water.old_reading }} → {{ record.water.new_reading }} m³)</span>
-                                            <span class="ml-3 text-slate-500">Тариф: €{{ record.water.rate }}/m³</span>
-                                        </div>
-                                    </template>
-
-                                    <!-- Tax Details -->
-                                    <template v-if="record.category === 'property_tax' || record.category === 'garbage_tax'">
-                                        <div class="text-slate-600 mt-1">
-                                            <span>Период: {{ record.taxPeriod || 'Годовой/Квартальный' }}</span>
-                                        </div>
-                                    </template>
-
-                                    <p v-if="record.notes" class="text-slate-500 italic mt-1">
-                                        <i class="fa-regular fa-comment mr-1"></i>{{ record.notes }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Amount & Attachments -->
-                        <div class="flex flex-row md:flex-col justify-between md:items-end items-center pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-                            <div class="text-right">
-                                <div class="text-lg font-bold text-slate-900">€ {{ Number(record.totalWithVat).toFixed(2) }}</div>
-                                <div class="text-xs text-slate-400">
-                                    Без НДС: € {{ Number(record.totalWithoutVat).toFixed(2) }} 
-                                    <span class="ml-1 px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded">НДС {{ record.vatRate }}%</span>
-                                </div>
-                            </div>
-
-                            <!-- Attachments Preview & Controls -->
-                            <div class="flex items-center space-x-2 mt-2">
-                                <button v-if="record.photo" @click="viewImage(record.photo)" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded.lg border border-indigo-200 flex items-center transition">
-                                    <i class="fa-solid fa-paperclip mr-1"></i> Чек/Скан
-                                </button>
-                                <button @click="editRecord(record)" class="text-slate-400 hover:text-slate-600 p-1.5 rounded hover:bg-slate-100 transition">
-                                    <i class="fa-solid fa-pen text-sm"></i>
-                                </button>
-                                <button @click="deleteRecord(record.id)" class="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-slate-100 transition">
-                                    <i class="fa-solid fa-trash-can text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Form Modal (Add/Edit) -->
-        <div v-if="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden transform transition-all my-8">
-                <!-- Modal Header -->
-                <div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
-                    <h3 class="text-lg font-bold">
-                        {{ modalMode === 'add' ? 'Добавить счет / показания' : 'Редактировать запись' }}
-                    </h3>
-                    <button @click="closeModal" class="text-slate-400 hover:text-white transition">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-
-                <!-- Form Content -->
-                <form @submit.prevent="saveRecord" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                    
-                    <!-- Category & Date Selection -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Категория</label>
-                            <select v-model="form.category" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500">
-                                <option value="electricity">⚡ Электроэнергия (3 тарифа)</option>
-                                <option value="water">💧 Водоснабжение</option>
-                                <option value="property_tax">🏛️ Налог на недвижимость</option>
-                                <option value="garbage_tax">🗑️ Налог на мусор (Такса смет)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Дата платежа / показаний</label>
-                            <input type="date" v-model="form.date" required class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                    </div>
-
+<!-- ... existing code ... -->
                     <!-- ELECTRICITY SPECIFIC INPUTS (3 Tariffs) -->
                     <div v-if="form.category === 'electricity'" class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 space-y-3">
-                        <div class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center">
-                            <i class="fa-solid fa-bolt mr-1.5"></i> Показания 3-х тарифного счетчика (кВт⋅ч)
+                        <div class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center justify-between">
+                            <span><i class="fa-solid fa-bolt mr-1.5"></i> Расчет 3-х тарифного счетчика</span>
+                            <span class="text-[11px] font-normal text-amber-700">Заполните показания и тарифы</span>
+                        </div>
+
+                        <!-- Tariff Header Row -->
+                        <div class="grid grid-cols-12 gap-2 text-[10px] font-bold text-slate-500 uppercase px-1">
+                            <div class="col-span-3">Тариф</div>
+                            <div class="col-span-2">Пред. (кВт)</div>
+                            <div class="col-span-2">Новые (кВт)</div>
+                            <div class="col-span-2">Объем</div>
+                            <div class="col-span-3">Ставка €/кВт (без НДС)</div>
                         </div>
 
                         <!-- Tariff 1 -->
-                        <div class="grid grid-cols-3 gap-2 items-center bg-white p-2.5 rounded-lg border border-amber-100">
-                            <div class="text-xs font-semibold text-slate-700">Т1 (Пиковый/День)</div>
-                            <input type="number" step="any" v-model.number="form.electricity.t1_old" placeholder="Пред." class="text-xs border p-1.5 rounded w-full">
-                            <input type="number" step="any" v-model.number="form.electricity.t1_new" placeholder="Новые" class="text-xs border p-1.5 rounded w-full" @input="calculateElectricitySum">
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-amber-100">
+                            <div class="col-span-3 text-xs font-semibold text-slate-700">Т1 (Пик)</div>
+                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t1_old" @input="calculateElectricitySum" placeholder="Пред." class="text-xs border p-1.5 rounded w-full"></div>
+                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t1_new" @input="calculateElectricitySum" placeholder="Нов." class="text-xs border p-1.5 rounded w-full"></div>
+                            <div class="col-span-2 text-xs font-medium text-slate-600 text-center">{{ Math.max(0, (form.electricity.t1_new || 0) - (form.electricity.t1_old || 0)) }}</div>
+                            <div class="col-span-3"><input type="number" step="any" v-model.number="form.electricity.t1_rate" @input="calculateElectricitySum" placeholder="€/кВт" class="text-xs border p-1.5 rounded w-full"></div>
                         </div>
 
                         <!-- Tariff 2 -->
-                        <div class="grid grid-cols-3 gap-2 items-center bg-white p-2.5 rounded-lg border border-amber-100">
-                            <div class="text-xs font-semibold text-slate-700">Т2 (Ночной)</div>
-                            <input type="number" step="any" v-model.number="form.electricity.t2_old" placeholder="Пред." class="text-xs border p-1.5 rounded w-full">
-                            <input type="number" step="any" v-model.number="form.electricity.t2_new" placeholder="Новые" class="text-xs border p-1.5 rounded w-full" @input="calculateElectricitySum">
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-amber-100">
+                            <div class="col-span-3 text-xs font-semibold text-slate-700">Т2 (Ночь)</div>
+                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t2_old" @input="calculateElectricitySum" placeholder="Пред." class="text-xs border p-1.5 rounded w-full"></div>
+                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t2_new" @input="calculateElectricitySum" placeholder="Нов." class="text-xs border p-1.5 rounded w-full"></div>
+                            <div class="col-span-2 text-xs font-medium text-slate-600 text-center">{{ Math.max(0, (form.electricity.t2_new || 0) - (form.electricity.t2_old || 0)) }}</div>
+                            <div class="col-span-3"><input type="number" step="any" v-model.number="form.electricity.t2_rate" @input="calculateElectricitySum" placeholder="€/кВт" class="text-xs border p-1.5 rounded w-full"></div>
                         </div>
 
                         <!-- Tariff 3 -->
-                        <div class="grid grid-cols-3 gap-2 items-center bg-white p-2.5 rounded-lg border border-amber-100">
-                            <div class="text-xs font-semibold text-slate-700">Т3 (Полупик/Дневной 2)</div>
-                            <input type="number" step="any" v-model.number="form.electricity.t3_old" placeholder="Пред." class="text-xs border p-1.5 rounded w-full">
-                            <input type="number" step="any" v-model.number="form.electricity.t3_new" placeholder="Новые" class="text-xs border p-1.5 rounded w-full" @input="calculateElectricitySum">
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-amber-100">
+                            <div class="col-span-3 text-xs font-semibold text-slate-700">Т3 (Полупик)</div>
+                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t3_old" @input="calculateElectricitySum" placeholder="Пред." class="text-xs border p-1.5 rounded w-full"></div>
+                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t3_new" @input="calculateElectricitySum" placeholder="Нов." class="text-xs border p-1.5 rounded w-full"></div>
+                            <div class="col-span-2 text-xs font-medium text-slate-600 text-center">{{ Math.max(0, (form.electricity.t3_new || 0) - (form.electricity.t3_old || 0)) }}</div>
+                            <div class="col-span-3"><input type="number" step="any" v-model.number="form.electricity.t3_rate" @input="calculateElectricitySum" placeholder="€/кВт" class="text-xs border p-1.5 rounded w-full"></div>
                         </div>
                     </div>
 
                     <!-- WATER SPECIFIC INPUTS -->
-                    <div v-if="form.category === 'water'" class="bg-sky-50/50 p-4 rounded-xl border border-sky-200 space-y-3">
-                        <div class="text-xs font-bold text-sky-800 uppercase tracking-wider flex items-center">
-                            <i class="fa-solid fa-droplet mr-1.5"></i> Показания водомера (м³)
-                        </div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="text-xs text-slate-600">Старые показания</label>
-                                <input type="number" step="any" v-model.number="form.water.old_reading" class="w-full text-xs border p-2 rounded-lg mt-1">
-                            </div>
-                            <div>
-                                <label class="text-xs text-slate-600">Новые показания</label>
-                                <input type="number" step="any" v-model.number="form.water.new_reading" @input="calculateWaterSum" class="w-full text-xs border p-2 rounded-lg mt-1">
-                            </div>
-                            <div>
-                                <label class="text-xs text-slate-600">Тариф (€/м³)</label>
-                                <input type="number" step="any" v-model.number="form.water.rate" @input="calculateWaterSum" class="w-full text-xs border p-2 rounded-lg mt-1">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TAX SPECIFIC INPUTS -->
-                    <div v-if="form.category === 'property_tax' || form.category === 'garbage_tax'" class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-200">
-                        <label class="text-xs font-semibold text-emerald-800 uppercase block mb-1">Период оплаты налогового взноса</label>
-                        <input type="text" v-model="form.taxPeriod" placeholder="Например: 1-й квартал 2026 или Год 2026" class="w-full text-sm border border-emerald-200 p-2.5 rounded-lg">
-                    </div>
-
-                    <!-- FINANCIAL & VAT CALCULATIONS -->
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-slate-700 uppercase">Финансовые расчеты (€)</span>
-                            <div class="flex items-center space-x-2">
-                                <label class="text-xs text-slate-600">Ставка НДС %:</label>
-                                <input type="number" v-model.number="form.vatRate" @input="recalculateVAT" class="w-16 text-xs border p-1 rounded text-center">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs text-slate-600 mb-1">Сумма без НДС (€)</label>
-                                <input type="number" step="any" v-model.number="form.totalWithoutVat" @input="onWithoutVatInput" required class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-indigo-700 mb-1">Итого С НДС (€)</label>
-                                <input type="number" step="any" v-model.number="form.totalWithVat" @input="onWithVatInput" required class="w-full bg-indigo-50/60 border border-indigo-300 text-slate-900 font-bold text-sm rounded-lg p-2.5">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ATTACHMENT / PHOTO SCAN -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Фотография / Скан квитанции или счетчика</label>
-                        <div class="flex items-center space-x-4">
-                            <input type="file" accept="image/*" @change="handleFileUpload" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                            <button v-if="form.photo" type="button" @click="form.photo = null" class="text-xs text-red-500 hover:underline">
-                                Удалить фото
-                            </button>
-                        </div>
-                        <div v-if="form.photo" class="mt-2 relative w-20 h-20 border rounded-lg overflow-hidden">
-                            <img :src="form.photo" class="w-full h-full object-cover">
-                        </div>
-                    </div>
-
-                    <!-- NOTES -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Примечания / Комментарии</label>
-                        <textarea v-model="form.notes" rows="2" placeholder="Номер лицевого счета, специфические заметки..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5"></textarea>
-                    </div>
-
-                    <!-- Buttons -->
-                    <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
-                        <button type="button" @click="closeModal" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Отмена</button>
-                        <button type="submit" class="px-5 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium shadow-sm">
-                            Сохранить
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Image Viewer Modal -->
-        <div v-if="activeImage" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4" @click="activeImage = null">
-            <div class="relative max-w-4xl max-h-[90vh] bg-transparent flex flex-col items-center">
-                <img :src="activeImage" class="max-w-full max-h-[80vh] rounded-lg shadow-2xl object-contain">
-                <button @click="activeImage = null" class="mt-4 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm font-medium transition">
-                    Закрыть просмотр
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const { createApp, markRaw } = Vue;
-
-        createApp({
-            data() {
-                return {
-                    showMenu: false,
-                    isModalOpen: false,
-                    modalMode: 'add',
-                    activeImage: null,
-                    
-                    // Filter variables
-                    filters: {
-                        category: 'all',
-                        month: '',
-                        search: ''
-                    },
-
+<!-- ... existing code ... -->
                     // Default form state
                     form: {
                         id: null,
@@ -455,9 +84,9 @@
                         notes: '',
                         photo: null,
                         electricity: {
-                            t1_old: 0, t1_new: 0,
-                            t2_old: 0, t2_new: 0,
-                            t3_old: 0, t3_new: 0
+                            t1_old: 0, t1_new: 0, t1_rate: 0.18,
+                            t2_old: 0, t2_new: 0, t2_rate: 0.10,
+                            t3_old: 0, t3_new: 0, t3_rate: 0.14
                         },
                         water: {
                             old_reading: 0,
@@ -466,68 +95,7 @@
                         },
                         taxPeriod: ''
                     },
-
-                    // Main stored records
-                    records: [],
-
-                    // Chart references
-                    lineChart: null,
-                    pieChart: null
-                }
-            },
-
-            computed: {
-                filteredRecords() {
-                    return this.records.filter(r => {
-                        // Category filter
-                        if (this.filters.category !== 'all' && r.category !== this.filters.category) return false;
-                        
-                        // Month filter
-                        if (this.filters.month && !r.date.startsWith(this.filters.month)) return false;
-                        
-                        // Search text
-                        if (this.filters.search) {
-                            const query = this.filters.search.toLowerCase();
-                            const notesMatch = r.notes && r.notes.toLowerCase().includes(query);
-                            const categoryMatch = this.getCategoryTitle(r.category).toLowerCase().includes(query);
-                            if (!notesMatch && !categoryMatch) return false;
-                        }
-                        
-                        return true;
-                    }).sort((a, b) => new Date(b.date) - new Date(a.date));
-                },
-
-                stats() {
-                    const currentMonthStr = new Date().toISOString().substring(0, 7);
-                    
-                    let thisMonthTotal = 0;
-                    let electricityTotal = 0;
-                    let waterTotal = 0;
-                    let taxesTotal = 0;
-
-                    this.records.forEach(r => {
-                        const amount = Number(r.totalWithVat) || 0;
-                        
-                        if (r.date.startsWith(currentMonthStr)) {
-                            thisMonthTotal += amount;
-                        }
-
-                        if (r.category === 'electricity') electricityTotal += amount;
-                        if (r.category === 'water') waterTotal += amount;
-                        if (r.category === 'property_tax' || r.category === 'garbage_tax') taxesTotal += amount;
-                    });
-
-                    return { thisMonthTotal, electricityTotal, waterTotal, taxesTotal };
-                }
-            },
-
-            mounted() {
-                this.loadRecords();
-                this.initCharts();
-            },
-
-            methods: {
-                // Storage Logic
+<!-- ... existing code ... -->
                 loadRecords() {
                     const saved = localStorage.getItem('utility_records_data');
                     if (saved) {
@@ -544,11 +112,15 @@
                                 category: 'electricity',
                                 date: new Date().toISOString().substring(0, 10),
                                 vatRate: 20,
-                                totalWithoutVat: 50.00,
-                                totalWithVat: 60.00,
-                                notes: 'Оплата за прошлый месяц',
+                                totalWithoutVat: 38.80,
+                                totalWithVat: 46.56,
+                                notes: 'Пример расчета электроэнергии',
                                 photo: null,
-                                electricity: { t1_old: 1200, t1_new: 1350, t2_old: 800, t2_new: 890, t3_old: 400, t3_new: 420 },
+                                electricity: { 
+                                    t1_old: 1200, t1_new: 1350, t1_rate: 0.18,
+                                    t2_old: 800, t2_new: 890, t2_rate: 0.10,
+                                    t3_old: 400, t3_new: 420, t3_rate: 0.14
+                                },
                                 water: { old_reading: 0, new_reading: 0, rate: 0 },
                                 taxPeriod: ''
                             }
@@ -556,40 +128,22 @@
                         this.saveToLocalStorage();
                     }
                 },
-
-                saveToLocalStorage() {
-                    localStorage.setItem('utility_records_data', JSON.stringify(this.records));
-                    this.updateCharts();
-                },
-
-                // VAT Calculations
-                onWithoutVatInput() {
-                    const vat = (this.form.vatRate || 0) / 100;
-                    this.form.totalWithVat = Number((this.form.totalWithoutVat * (1 + vat)).toFixed(2));
-                },
-
-                onWithVatInput() {
-                    const vat = (this.form.vatRate || 0) / 100;
-                    this.form.totalWithoutVat = Number((this.form.totalWithVat / (1 + vat)).toFixed(2));
-                },
-
-                recalculateVAT() {
-                    this.onWithoutVatInput();
-                },
-
-                calculateWaterSum() {
-                    if (this.form.category === 'water') {
-                        const diff = (this.form.water.new_reading || 0) - (this.form.water.old_reading || 0);
-                        if (diff > 0 && this.form.water.rate > 0) {
-                            const withoutVat = diff * this.form.water.rate;
-                            this.form.totalWithoutVat = Number(withoutVat.toFixed(2));
-                            this.onWithoutVatInput();
-                        }
-                    }
-                },
-
+<!-- ... existing code ... -->
                 calculateElectricitySum() {
-                    // Logic to auto calc if rates were specified, currently placeholder for user customization
+                    if (this.form.category === 'electricity') {
+                        const el = this.form.electricity;
+                        const kwh1 = Math.max(0, (el.t1_new || 0) - (el.t1_old || 0));
+                        const kwh2 = Math.max(0, (el.t2_new || 0) - (el.t2_old || 0));
+                        const kwh3 = Math.max(0, (el.t3_new || 0) - (el.t3_old || 0));
+
+                        const cost1 = kwh1 * (el.t1_rate || 0);
+                        const cost2 = kwh2 * (el.t2_rate || 0);
+                        const cost3 = kwh3 * (el.t3_rate || 0);
+
+                        const totalWithoutVat = cost1 + cost2 + cost3;
+                        this.form.totalWithoutVat = Number(totalWithoutVat.toFixed(2));
+                        this.onWithoutVatInput();
+                    }
                 },
 
                 // Modal Controls
@@ -599,8 +153,30 @@
                         this.form = JSON.parse(JSON.stringify(record));
                     } else {
                         this.resetForm();
+                        this.autoFillLastReadings();
                     }
                     this.isModalOpen = true;
+                },
+
+                autoFillLastReadings() {
+                    // Find last electricity record to populate old values
+                    const lastElec = this.records.find(r => r.category === 'electricity');
+                    if (lastElec && lastElec.electricity) {
+                        this.form.electricity.t1_old = lastElec.electricity.t1_new || 0;
+                        this.form.electricity.t2_old = lastElec.electricity.t2_new || 0;
+                        this.form.electricity.t3_old = lastElec.electricity.t3_new || 0;
+
+                        if (lastElec.electricity.t1_rate) this.form.electricity.t1_rate = lastElec.electricity.t1_rate;
+                        if (lastElec.electricity.t2_rate) this.form.electricity.t2_rate = lastElec.electricity.t2_rate;
+                        if (lastElec.electricity.t3_rate) this.form.electricity.t3_rate = lastElec.electricity.t3_rate;
+                    }
+
+                    // Find last water record
+                    const lastWater = this.records.find(r => r.category === 'water');
+                    if (lastWater && lastWater.water) {
+                        this.form.water.old_reading = lastWater.water.new_reading || 0;
+                        if (lastWater.water.rate) this.form.water.rate = lastWater.water.rate;
+                    }
                 },
 
                 closeModal() {
@@ -617,222 +193,9 @@
                         totalWithVat: 0,
                         notes: '',
                         photo: null,
-                        electricity: { t1_old: 0, t1_new: 0, t2_old: 0, t2_new: 0, t3_old: 0, t3_new: 0 },
+                        electricity: { t1_old: 0, t1_new: 0, t1_rate: 0.18, t2_old: 0, t2_new: 0, t2_rate: 0.10, t3_old: 0, t3_new: 0, t3_rate: 0.14 },
                         water: { old_reading: 0, new_reading: 0, rate: 1.50 },
                         taxPeriod: ''
                     };
                 },
-
-                saveRecord() {
-                    if (this.modalMode === 'add') {
-                        const newRecord = {
-                            ...JSON.parse(JSON.stringify(this.form)),
-                            id: Date.now().toString()
-                        };
-                        this.records.unshift(newRecord);
-                    } else {
-                        const idx = this.records.findIndex(r => r.id === this.form.id);
-                        if (idx !== -1) {
-                            this.records[idx] = JSON.parse(JSON.stringify(this.form));
-                        }
-                    }
-                    this.saveToLocalStorage();
-                    this.closeModal();
-                },
-
-                editRecord(record) {
-                    this.openModal('edit', record);
-                },
-
-                deleteRecord(id) {
-                    if (confirm('Вы уверены, что хотите удалить эту запись?')) {
-                        this.records = this.records.filter(r => r.id !== id);
-                        this.saveToLocalStorage();
-                    }
-                },
-
-                // File Upload Base64 Conversion
-                handleFileUpload(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        if (file.size > 5 * 1024 * 1024) {
-                            alert('Размер файла превышает 5 МБ. Выберите меньший файл.');
-                            return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.form.photo = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                },
-
-                viewImage(photoBase64) {
-                    this.activeImage = photoBase64;
-                },
-
-                // Filters reset
-                resetFilters() {
-                    this.filters = { category: 'all', month: '', search: '' };
-                },
-
-                // Helpers for category visual badges
-                getCategoryTitle(cat) {
-                    const map = {
-                        electricity: 'Электроэнергия',
-                        water: 'Водоснабжение',
-                        property_tax: 'Налог на недвижимость',
-                        garbage_tax: 'Налог на мусор (Такса смет)'
-                    };
-                    return map[cat] || cat;
-                },
-
-                getCategoryIcon(cat) {
-                    const map = {
-                        electricity: 'fa-solid fa-bolt',
-                        water: 'fa-solid fa-droplet',
-                        property_tax: 'fa-solid fa-building',
-                        garbage_tax: 'fa-solid fa-trash-can'
-                    };
-                    return map[cat] || 'fa-solid fa-receipt';
-                },
-
-                getCategoryBadgeClass(cat) {
-                    const map = {
-                        electricity: 'bg-amber-100 text-amber-600',
-                        water: 'bg-sky-100 text-sky-600',
-                        property_tax: 'bg-emerald-100 text-emerald-600',
-                        garbage_tax: 'bg-teal-100 text-teal-600'
-                    };
-                    return map[cat] || 'bg-slate-100 text-slate-600';
-                },
-
-                formatDate(dateStr) {
-                    if (!dateStr) return '';
-                    const d = new Date(dateStr);
-                    return d.toLocaleDateString('ru-RU', { year: 'numeric', month: 'short', day: 'numeric' });
-                },
-
-                // Backup JSON Import/Export
-                exportJSON() {
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.records, null, 2));
-                    const downloadAnchor = document.createElement('a');
-                    downloadAnchor.setAttribute("href", dataStr);
-                    downloadAnchor.setAttribute("download", `utility_bills_backup_${new Date().toISOString().substring(0, 10)}.json`);
-                    document.body.appendChild(downloadAnchor);
-                    downloadAnchor.click();
-                    downloadAnchor.remove();
-                },
-
-                importJSON(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            try {
-                                const parsed = JSON.parse(e.target.result);
-                                if (Array.isArray(parsed)) {
-                                    this.records = parsed;
-                                    this.saveToLocalStorage();
-                                    alert('Данные успешно импортированы!');
-                                } else {
-                                    alert('Неверный формат JSON файла.');
-                                }
-                            } catch(err) {
-                                alert('Ошибка чтения файла: ' + err.message);
-                            }
-                        };
-                        reader.readAsText(file);
-                    }
-                },
-
-                confirmClear() {
-                    if (confirm('Вы действительно хотите полностью очистить сохраненные данные?')) {
-                        this.records = [];
-                        this.saveToLocalStorage();
-                    }
-                },
-
-                // Chart.js initialization & Updates
-                initCharts() {
-                    const ctxLine = document.getElementById('expensesChart').getContext('2d');
-                    const ctxPie = document.getElementById('pieChart').getContext('2d');
-
-                    this.lineChart = markRaw(new Chart(ctxLine, {
-                        type: 'bar',
-                        data: { labels: [], datasets: [] },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { position: 'bottom' } },
-                            scales: { y: { beginAtZero: true } }
-                        }
-                    }));
-
-                    this.pieChart = markRaw(new Chart(ctxPie, {
-                        type: 'doughnut',
-                        data: { labels: [], datasets: [] },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { position: 'bottom' } }
-                        }
-                    }));
-
-                    this.updateCharts();
-                },
-
-                updateCharts() {
-                    if (!this.lineChart || !this.pieChart) return;
-
-                    // Aggregate pie data
-                    const catTotals = {
-                        electricity: 0,
-                        water: 0,
-                        property_tax: 0,
-                        garbage_tax: 0
-                    };
-
-                    this.records.forEach(r => {
-                        if (catTotals[r.category] !== undefined) {
-                            catTotals[r.category] += Number(r.totalWithVat) || 0;
-                        }
-                    });
-
-                    this.pieChart.data.labels = ['Электричество', 'Вода', 'Налог на недвиж.', 'Такса смет'];
-                    this.pieChart.data.datasets = [{
-                        data: [
-                            catTotals.electricity.toFixed(2),
-                            catTotals.water.toFixed(2),
-                            catTotals.property_tax.toFixed(2),
-                            catTotals.garbage_tax.toFixed(2)
-                        ],
-                        backgroundColor: ['#f59e0b', '#0284c7', '#10b981', '#14b8a6']
-                    }];
-                    this.pieChart.update();
-
-                    // Aggregate line/bar chart data by last 6 months
-                    const monthsMap = {};
-                    this.records.forEach(r => {
-                        const m = r.date.substring(0, 7);
-                        if (!monthsMap[m]) monthsMap[m] = 0;
-                        monthsMap[m] += Number(r.totalWithVat) || 0;
-                    });
-
-                    const sortedMonths = Object.keys(monthsMap).sort().slice(-6);
-                    const monthValues = sortedMonths.map(m => monthsMap[m].toFixed(2));
-
-                    this.lineChart.data.labels = sortedMonths;
-                    this.lineChart.data.datasets = [{
-                        label: 'Расходы (€)',
-                        data: monthValues,
-                        backgroundColor: '#6366f1',
-                        borderRadius: 6
-                    }];
-                    this.lineChart.update();
-                }
-            }
-        }).mount('#app');
-    </script>
-</body>
-</html>
+<!-- ... existing code ... -->
