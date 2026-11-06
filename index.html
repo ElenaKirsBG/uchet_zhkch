@@ -3,24 +3,30 @@
                                 <div class="text-xs text-slate-600 space-y-1">
                                     <!-- Electricity Details -->
                                     <template v-if="record.category === 'electricity'">
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-amber-50/60 p-2.5 rounded-lg border border-amber-100 mt-2">
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-2">
                                             <div>
-                                                <div class="font-bold text-amber-800">Т1 (Пиковый/День):</div>
-                                                <div>{{ (record.electricity.t1_new - record.electricity.t1_old) }} кВт⋅ч</div>
-                                                <div class="text-[10px] text-slate-500">({{ record.electricity.t1_old }} → {{ record.electricity.t1_new }})</div>
-                                                <div class="text-[11px] font-semibold text-slate-700">€ {{ ((record.electricity.t1_new - record.electricity.t1_old) * (record.electricity.t1_rate || 0)).toFixed(2) }} <span class="text-[9px] font-normal text-slate-400">(по €{{ record.electricity.t1_rate }}/кВт)</span></div>
+                                                <span class="font-medium text-amber-700">Т1 (Пик/День):</span> 
+                                                <span>{{ (record.electricity.t1_new - record.electricity.t1_old).toFixed(1) }} кВт⋅ч</span>
+                                                <div class="text-[10px] text-slate-500">
+                                                    {{ record.electricity.t1_old }} → {{ record.electricity.t1_new }}
+                                                    <span v-if="record.electricity.t1_rate"> | €{{ record.electricity.t1_rate }}/кВт</span>
+                                                </div>
                                             </div>
                                             <div>
-                                                <div class="font-bold text-amber-800">Т2 (Ночной):</div>
-                                                <div>{{ (record.electricity.t2_new - record.electricity.t2_old) }} кВт⋅ч</div>
-                                                <div class="text-[10px] text-slate-500">({{ record.electricity.t2_old }} → {{ record.electricity.t2_new }})</div>
-                                                <div class="text-[11px] font-semibold text-slate-700">€ {{ ((record.electricity.t2_new - record.electricity.t2_old) * (record.electricity.t2_rate || 0)).toFixed(2) }} <span class="text-[9px] font-normal text-slate-400">(по €{{ record.electricity.t2_rate }}/кВт)</span></div>
+                                                <span class="font-medium text-amber-700">Т2 (Ночной):</span> 
+                                                <span>{{ (record.electricity.t2_new - record.electricity.t2_old).toFixed(1) }} кВт⋅ч</span>
+                                                <div class="text-[10px] text-slate-500">
+                                                    {{ record.electricity.t2_old }} → {{ record.electricity.t2_new }}
+                                                    <span v-if="record.electricity.t2_rate"> | €{{ record.electricity.t2_rate }}/кВт</span>
+                                                </div>
                                             </div>
                                             <div>
-                                                <div class="font-bold text-amber-800">Т3 (Полупик/Дневной 2):</div>
-                                                <div>{{ (record.electricity.t3_new - record.electricity.t3_old) }} кВт⋅ч</div>
-                                                <div class="text-[10px] text-slate-500">({{ record.electricity.t3_old }} → {{ record.electricity.t3_new }})</div>
-                                                <div class="text-[11px] font-semibold text-slate-700">€ {{ ((record.electricity.t3_new - record.electricity.t3_old) * (record.electricity.t3_rate || 0)).toFixed(2) }} <span class="text-[9px] font-normal text-slate-400">(по €{{ record.electricity.t3_rate }}/кВт)</span></div>
+                                                <span class="font-medium text-amber-700">Т3 (Полупик/День 2):</span> 
+                                                <span>{{ (record.electricity.t3_new - record.electricity.t3_old).toFixed(1) }} кВт⋅ч</span>
+                                                <div class="text-[10px] text-slate-500">
+                                                    {{ record.electricity.t3_old }} → {{ record.electricity.t3_new }}
+                                                    <span v-if="record.electricity.t3_rate"> | €{{ record.electricity.t3_rate }}/кВт</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </template>
@@ -30,44 +36,47 @@
                     <!-- ELECTRICITY SPECIFIC INPUTS (3 Tariffs) -->
                     <div v-if="form.category === 'electricity'" class="bg-amber-50/50 p-4 rounded-xl border border-amber-200 space-y-3">
                         <div class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center justify-between">
-                            <span><i class="fa-solid fa-bolt mr-1.5"></i> Расчет 3-х тарифного счетчика</span>
-                            <span class="text-[11px] font-normal text-amber-700">Заполните показания и тарифы</span>
+                            <span><i class="fa-solid fa-bolt mr-1.5"></i> Показания 3-х тарифного счетчика и расценки</span>
+                            <span class="text-[11px] text-amber-700 font-normal">Стоимость 1 кВт⋅ч указана БЕЗ НДС</span>
                         </div>
 
-                        <!-- Tariff Header Row -->
-                        <div class="grid grid-cols-12 gap-2 text-[10px] font-bold text-slate-500 uppercase px-1">
+                        <!-- Tariff Header -->
+                        <div class="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-500 px-1">
                             <div class="col-span-3">Тариф</div>
-                            <div class="col-span-2">Пред. (кВт)</div>
-                            <div class="col-span-2">Новые (кВт)</div>
-                            <div class="col-span-2">Объем</div>
-                            <div class="col-span-3">Ставка €/кВт (без НДС)</div>
+                            <div class="col-span-3">Старое покс.</div>
+                            <div class="col-span-3">Новое покс.</div>
+                            <div class="col-span-3">Тариф (€/кВт⋅ч)</div>
                         </div>
 
                         <!-- Tariff 1 -->
-                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-amber-100">
-                            <div class="col-span-3 text-xs font-semibold text-slate-700">Т1 (Пик)</div>
-                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t1_old" @input="calculateElectricitySum" placeholder="Пред." class="text-xs border p-1.5 rounded w-full"></div>
-                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t1_new" @input="calculateElectricitySum" placeholder="Нов." class="text-xs border p-1.5 rounded w-full"></div>
-                            <div class="col-span-2 text-xs font-medium text-slate-600 text-center">{{ Math.max(0, (form.electricity.t1_new || 0) - (form.electricity.t1_old || 0)) }}</div>
-                            <div class="col-span-3"><input type="number" step="any" v-model.number="form.electricity.t1_rate" @input="calculateElectricitySum" placeholder="€/кВт" class="text-xs border p-1.5 rounded w-full"></div>
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-amber-100 text-xs">
+                            <div class="col-span-3 font-semibold text-slate-700">Т1 (Пик)</div>
+                            <input type="number" step="any" v-model.number="form.electricity.t1_old" placeholder="Пред." @input="calculateElectricitySum" class="col-span-3 border p-1.5 rounded w-full">
+                            <input type="number" step="any" v-model.number="form.electricity.t1_new" placeholder="Новое" @input="calculateElectricitySum" class="col-span-3 border p-1.5 rounded w-full">
+                            <input type="number" step="any" v-model.number="form.electricity.t1_rate" placeholder="€/кВт" @input="calculateElectricitySum" class="col-span-3 border p-1.5 rounded w-full bg-amber-50/40">
                         </div>
 
                         <!-- Tariff 2 -->
-                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-amber-100">
-                            <div class="col-span-3 text-xs font-semibold text-slate-700">Т2 (Ночь)</div>
-                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t2_old" @input="calculateElectricitySum" placeholder="Пред." class="text-xs border p-1.5 rounded w-full"></div>
-                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t2_new" @input="calculateElectricitySum" placeholder="Нов." class="text-xs border p-1.5 rounded w-full"></div>
-                            <div class="col-span-2 text-xs font-medium text-slate-600 text-center">{{ Math.max(0, (form.electricity.t2_new || 0) - (form.electricity.t2_old || 0)) }}</div>
-                            <div class="col-span-3"><input type="number" step="any" v-model.number="form.electricity.t2_rate" @input="calculateElectricitySum" placeholder="€/кВт" class="text-xs border p-1.5 rounded w-full"></div>
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-amber-100 text-xs">
+                            <div class="col-span-3 font-semibold text-slate-700">Т2 (Ночь)</div>
+                            <input type="number" step="any" v-model.number="form.electricity.t2_old" placeholder="Пред." @input="calculateElectricitySum" class="col-span-3 border p-1.5 rounded w-full">
+                            <input type="number" step="any" v-model.number="form.electricity.t2_new" placeholder="Новое" @input="calculateElectricitySum" class="col-span-3 border p-1.5 rounded w-full">
+                            <input type="number" step="any" v-model.number="form.electricity.t2_rate" placeholder="€/кВт" @input="calculateElectricitySum" class="col-span-3 border p-1.5 rounded w-full bg-amber-50/40">
                         </div>
 
                         <!-- Tariff 3 -->
-                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-amber-100">
-                            <div class="col-span-3 text-xs font-semibold text-slate-700">Т3 (Полупик)</div>
-                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t3_old" @input="calculateElectricitySum" placeholder="Пред." class="text-xs border p-1.5 rounded w-full"></div>
-                            <div class="col-span-2"><input type="number" step="any" v-model.number="form.electricity.t3_new" @input="calculateElectricitySum" placeholder="Нов." class="text-xs border p-1.5 rounded w-full"></div>
-                            <div class="col-span-2 text-xs font-medium text-slate-600 text-center">{{ Math.max(0, (form.electricity.t3_new || 0) - (form.electricity.t3_old || 0)) }}</div>
-                            <div class="col-span-3"><input type="number" step="any" v-model.number="form.electricity.t3_rate" @input="calculateElectricitySum" placeholder="€/кВт" class="text-xs border p-1.5 rounded w-full"></div>
+                        <div class="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-amber-100 text-xs">
+                            <div class="col-span-3 font-semibold text-slate-700">Т3 (Полупик)</div>
+                            <input type="number" step="any" v-model.number="form.electricity.t3_old" placeholder="Пред." @input="calculateElectricitySum" class="col-span-3 border p-1.5 rounded w-full">
+                            <input type="number" step="any" v-model.number="form.electricity.t3_new" placeholder="Новое" @input="calculateElectricitySum" class="col-span-3 border p-1.5 rounded w-full">
+                            <input type="number" step="any" v-model.number="form.electricity.t3_rate" placeholder="€/кВт" @input="calculateElectricitySum" class="col-span-3 border p-1.5 rounded w-full bg-amber-50/40">
+                        </div>
+
+                        <!-- Summary info box -->
+                        <div class="text-[11px] text-amber-900 bg-amber-100/60 p-2 rounded flex justify-between">
+                            <span>Т1: <b>{{ Math.max(0, (form.electricity.t1_new || 0) - (form.electricity.t1_old || 0)).toFixed(1) }}</b> кВт</span>
+                            <span>Т2: <b>{{ Math.max(0, (form.electricity.t2_new || 0) - (form.electricity.t2_old || 0)).toFixed(1) }}</b> кВт</span>
+                            <span>Т3: <b>{{ Math.max(0, (form.electricity.t3_new || 0) - (form.electricity.t3_old || 0)).toFixed(1) }}</b> кВт</span>
                         </div>
                     </div>
 
@@ -84,9 +93,9 @@
                         notes: '',
                         photo: null,
                         electricity: {
-                            t1_old: 0, t1_new: 0, t1_rate: 0.18,
-                            t2_old: 0, t2_new: 0, t2_rate: 0.10,
-                            t3_old: 0, t3_new: 0, t3_rate: 0.14
+                            t1_old: 0, t1_new: 0, t1_rate: 0.15,
+                            t2_old: 0, t2_new: 0, t2_rate: 0.08,
+                            t3_old: 0, t3_new: 0, t3_rate: 0.12
                         },
                         water: {
                             old_reading: 0,
@@ -95,40 +104,41 @@
                         },
                         taxPeriod: ''
                     },
+
+                    // Main stored records
 <!-- ... existing code ... -->
-                loadRecords() {
-                    const saved = localStorage.getItem('utility_records_data');
-                    if (saved) {
-                        try {
-                            this.records = JSON.parse(saved);
-                        } catch(e) {
-                            console.error('Ошибка загрузки локальных данных:', e);
-                        }
-                    } else {
-                        // Sample initial data if empty
                         this.records = [
                             {
                                 id: '1',
                                 category: 'electricity',
                                 date: new Date().toISOString().substring(0, 10),
                                 vatRate: 20,
-                                totalWithoutVat: 38.80,
-                                totalWithVat: 46.56,
-                                notes: 'Пример расчета электроэнергии',
+                                totalWithoutVat: 32.10,
+                                totalWithVat: 38.52,
+                                notes: 'Оплата за прошлый месяц',
                                 photo: null,
                                 electricity: { 
-                                    t1_old: 1200, t1_new: 1350, t1_rate: 0.18,
-                                    t2_old: 800, t2_new: 890, t2_rate: 0.10,
-                                    t3_old: 400, t3_new: 420, t3_rate: 0.14
+                                    t1_old: 1200, t1_new: 1350, t1_rate: 0.15,
+                                    t2_old: 800, t2_new: 890, t2_rate: 0.08,
+                                    t3_old: 400, t3_new: 420, t3_rate: 0.12
                                 },
                                 water: { old_reading: 0, new_reading: 0, rate: 0 },
                                 taxPeriod: ''
                             }
                         ];
                         this.saveToLocalStorage();
+<!-- ... existing code ... -->
+                calculateWaterSum() {
+                    if (this.form.category === 'water') {
+                        const diff = (this.form.water.new_reading || 0) - (this.form.water.old_reading || 0);
+                        if (diff > 0 && this.form.water.rate > 0) {
+                            const withoutVat = diff * this.form.water.rate;
+                            this.form.totalWithoutVat = Number(withoutVat.toFixed(2));
+                            this.onWithoutVatInput();
+                        }
                     }
                 },
-<!-- ... existing code ... -->
+
                 calculateElectricitySum() {
                     if (this.form.category === 'electricity') {
                         const el = this.form.electricity;
@@ -136,11 +146,11 @@
                         const kwh2 = Math.max(0, (el.t2_new || 0) - (el.t2_old || 0));
                         const kwh3 = Math.max(0, (el.t3_new || 0) - (el.t3_old || 0));
 
-                        const cost1 = kwh1 * (el.t1_rate || 0);
-                        const cost2 = kwh2 * (el.t2_rate || 0);
-                        const cost3 = kwh3 * (el.t3_rate || 0);
+                        const sum1 = kwh1 * (el.t1_rate || 0);
+                        const sum2 = kwh2 * (el.t2_rate || 0);
+                        const sum3 = kwh3 * (el.t3_rate || 0);
 
-                        const totalWithoutVat = cost1 + cost2 + cost3;
+                        const totalWithoutVat = sum1 + sum2 + sum3;
                         this.form.totalWithoutVat = Number(totalWithoutVat.toFixed(2));
                         this.onWithoutVatInput();
                     }
@@ -153,30 +163,8 @@
                         this.form = JSON.parse(JSON.stringify(record));
                     } else {
                         this.resetForm();
-                        this.autoFillLastReadings();
                     }
                     this.isModalOpen = true;
-                },
-
-                autoFillLastReadings() {
-                    // Find last electricity record to populate old values
-                    const lastElec = this.records.find(r => r.category === 'electricity');
-                    if (lastElec && lastElec.electricity) {
-                        this.form.electricity.t1_old = lastElec.electricity.t1_new || 0;
-                        this.form.electricity.t2_old = lastElec.electricity.t2_new || 0;
-                        this.form.electricity.t3_old = lastElec.electricity.t3_new || 0;
-
-                        if (lastElec.electricity.t1_rate) this.form.electricity.t1_rate = lastElec.electricity.t1_rate;
-                        if (lastElec.electricity.t2_rate) this.form.electricity.t2_rate = lastElec.electricity.t2_rate;
-                        if (lastElec.electricity.t3_rate) this.form.electricity.t3_rate = lastElec.electricity.t3_rate;
-                    }
-
-                    // Find last water record
-                    const lastWater = this.records.find(r => r.category === 'water');
-                    if (lastWater && lastWater.water) {
-                        this.form.water.old_reading = lastWater.water.new_reading || 0;
-                        if (lastWater.water.rate) this.form.water.rate = lastWater.water.rate;
-                    }
                 },
 
                 closeModal() {
@@ -184,6 +172,25 @@
                 },
 
                 resetForm() {
+                    // Auto-fill previous electricity readings if available
+                    let prevElec = { t1_old: 0, t1_new: 0, t1_rate: 0.15, t2_old: 0, t2_new: 0, t2_rate: 0.08, t3_old: 0, t3_new: 0, t3_rate: 0.12 };
+                    const lastElectricityRecord = this.records.find(r => r.category === 'electricity');
+                    
+                    if (lastElectricityRecord && lastElectricityRecord.electricity) {
+                        const e = lastElectricityRecord.electricity;
+                        prevElec = {
+                            t1_old: e.t1_new || 0,
+                            t1_new: e.t1_new || 0,
+                            t1_rate: e.t1_rate || 0.15,
+                            t2_old: e.t2_new || 0,
+                            t2_new: e.t2_new || 0,
+                            t2_rate: e.t2_rate || 0.08,
+                            t3_old: e.t3_new || 0,
+                            t3_new: e.t3_new || 0,
+                            t3_rate: e.t3_rate || 0.12
+                        };
+                    }
+
                     this.form = {
                         id: null,
                         category: 'electricity',
@@ -193,9 +200,11 @@
                         totalWithVat: 0,
                         notes: '',
                         photo: null,
-                        electricity: { t1_old: 0, t1_new: 0, t1_rate: 0.18, t2_old: 0, t2_new: 0, t2_rate: 0.10, t3_old: 0, t3_new: 0, t3_rate: 0.14 },
+                        electricity: prevElec,
                         water: { old_reading: 0, new_reading: 0, rate: 1.50 },
                         taxPeriod: ''
                     };
                 },
+
+                saveRecord() {
 <!-- ... existing code ... -->
