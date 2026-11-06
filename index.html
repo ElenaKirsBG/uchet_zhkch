@@ -1029,17 +1029,28 @@
                 },
 
                 exportJSON() {
-                    const dataObj = {
-                        records: this.records,
-                        tariffRules: this.tariffRules
-                    };
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataObj, null, 2));
-                    const downloadAnchor = document.createElement('a');
-                    downloadAnchor.setAttribute("href", dataStr);
-                    downloadAnchor.setAttribute("download", `utility_bills_backup_${new Date().toISOString().substring(0, 10)}.json`);
-                    document.body.appendChild(downloadAnchor);
-                    downloadAnchor.click();
-                    downloadAnchor.remove();
+                    try {
+                        const dataObj = {
+                            records: this.records,
+                            tariffRules: this.tariffRules
+                        };
+                        const jsonStr = JSON.stringify(dataObj, null, 2);
+                        const blob = new Blob([jsonStr], { type: 'application/json' });
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        const downloadAnchor = document.createElement('a');
+                        downloadAnchor.href = blobUrl;
+                        downloadAnchor.download = `utility_bills_backup_${new Date().toISOString().substring(0, 10)}.json`;
+                        document.body.appendChild(downloadAnchor);
+                        downloadAnchor.click();
+                        
+                        setTimeout(() => {
+                            document.body.removeChild(downloadAnchor);
+                            URL.revokeObjectURL(blobUrl);
+                        }, 100);
+                    } catch (err) {
+                        alert('Ошибка при выгрузке файла: ' + err.message);
+                    }
                 },
 
                 importJSON(event) {
