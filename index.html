@@ -1,1163 +1,992 @@
-<!DOCTYPE html>
-<html lang="ru" class="h-full bg-slate-50">
+<!doctype html>
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Учет коммунальных платежей и налогов</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Vue 3 Options/Composition API script -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Chart.js for data visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- FontAwesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Коммуналка">
+<meta name="robots" content="noindex">
+<meta name="description" content="Коммуналка — учёт коммунальных платежей и показаний счётчиков. © 2026 Елена Кирсанова">
+<title>Коммуналка — учёт ЖКХ</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<script>/* тема — до отрисовки, чтобы не мигало */
+try{var _t=(JSON.parse(localStorage.getItem('ku.settings')||'{}')||{}).theme||'auto';document.documentElement.dataset.theme=_t==='dark'||(_t==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}catch(e){}</script>
+<style>
+/* Коммуналка · © 2026 Елена Кирсанова. Все права защищены. */
+:root{--bg:#f4f2ff;--card:#fff;--card2:#f7f6ff;--ink:#1f1b3d;--mut:#6c6892;--line:rgba(91,76,180,.14);--acc:#7c3aed;--acc2:#db2777;
+ --good:#047857;--goodbg:#d1fae5;--bad:#e11d48;--badbg:#ffe4e6;--warn:#a16207;--warnbg:#fef3c7;
+ --sh:0 10px 28px rgba(76,52,170,.10),0 1px 3px rgba(76,52,170,.07);--grad:linear-gradient(135deg,#6366f1 0%,#8b5cf6 36%,#d946ef 70%,#f43f5e 100%);
+ --r:22px;--pro-acc:#7c3aed;color-scheme:light}
+:root[data-theme=dark]{--bg:#0e0c1c;--card:#1b1831;--card2:#24203f;--ink:#f2f0ff;--mut:#a9a5cf;--line:rgba(255,255,255,.10);
+ --good:#34d399;--goodbg:rgba(16,185,129,.16);--bad:#fb7185;--badbg:rgba(244,63,94,.17);--warn:#fbbf24;--warnbg:rgba(245,158,11,.16);
+ --sh:0 10px 28px rgba(0,0,0,.40);--grad:linear-gradient(135deg,#4f46e5 0%,#7c3aed 38%,#c026d3 72%,#e11d48 100%);color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;min-height:100vh;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+body:before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(55% 38% at 0% 0%,rgba(99,102,241,.16),transparent 70%),radial-gradient(50% 34% at 100% 12%,rgba(236,72,153,.13),transparent 70%),radial-gradient(60% 40% at 50% 100%,rgba(56,189,248,.12),transparent 70%)}
+body.noscroll{overflow:hidden}
+button{font-family:inherit;cursor:pointer}
+a{color:var(--acc)}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+.num{font-variant-numeric:tabular-nums}
+.mut{color:var(--mut)}.small{font-size:13px}.hide{display:none!important}
+
+/* ---------- шапка ---------- */
+header.hero{background:var(--grad);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 0 62px;border-radius:0 0 34px 34px;position:relative;overflow:hidden}
+header.hero.compact{padding-bottom:22px}
+header.hero:before,header.hero:after{content:'';position:absolute;border-radius:50%;background:rgba(255,255,255,.10);pointer-events:none}
+header.hero:before{width:240px;height:240px;right:-70px;top:-90px}
+header.hero:after{width:150px;height:150px;left:-50px;bottom:-70px;background:rgba(255,255,255,.08)}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:1}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.01em}
+.brand .lg{width:38px;height:38px;border-radius:13px;background:rgba(255,255,255,.22);display:grid;place-items:center;font-size:20px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.hchip{border:0;border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.2);color:#fff;font-weight:700;font-size:13px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);white-space:nowrap}
+.objsw{margin-top:14px;position:relative;z-index:1;border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:14px;padding:8px 12px;font-weight:700;font-size:15px;display:inline-flex;gap:8px;align-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+.month{display:flex;align-items:center;gap:6px;margin-top:16px;position:relative;z-index:1;font-weight:700;font-size:17px}
+.month button{border:0;background:rgba(255,255,255,.18);color:#fff;width:34px;height:34px;border-radius:11px;font-size:20px;line-height:1}
+.month button:disabled{opacity:.35}
+.month span{min-width:140px;text-align:center}
+.total{font-size:clamp(32px,11vw,42px);font-weight:850;letter-spacing:-.025em;margin-top:6px;position:relative;z-index:1;line-height:1.1}
+.hpills{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;position:relative;z-index:1}
+.hpills span{background:rgba(255,255,255,.18);border-radius:999px;padding:5px 10px;font-size:13px;font-weight:650}
+.hpills span.w{background:rgba(255,255,255,.95);color:#be123c}
+.htitle{font-size:26px;font-weight:850;letter-spacing:-.02em;margin-top:14px;position:relative;z-index:1}
+main.wrap{margin-top:-42px;position:relative;z-index:2}
+main.wrap.flat{margin-top:16px}
+
+/* ---------- карточки ---------- */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin:0 0 14px}
+.card h3{margin:0 0 10px;font-size:17px;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h3 small{font-weight:600;color:var(--mut);font-size:13px}
+.lnk{border:0;background:none;color:var(--acc);font-weight:700;font-size:14px;padding:0}
+.ban{border-radius:18px;padding:12px 14px;margin:0 0 12px;font-size:14.5px;display:flex;gap:10px;align-items:flex-start}
+.ban b{display:block}.ban .bi{font-size:22px;line-height:1.1}
+.ban.warn{background:linear-gradient(var(--warnbg),var(--warnbg)),var(--card);color:var(--warn);box-shadow:var(--sh)}.ban.bad{background:linear-gradient(var(--badbg),var(--badbg)),var(--card);color:var(--bad);box-shadow:var(--sh)}.ban.good{background:linear-gradient(var(--goodbg),var(--goodbg)),var(--card);color:var(--good);box-shadow:var(--sh)}
+.ban.info{background:var(--card);box-shadow:var(--sh)}
+.ban .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.ban .acts button{border:0;border-radius:10px;padding:7px 11px;font-weight:700;font-size:13px;background:rgba(127,127,127,.16);color:inherit}
+
+/* плитки категорий */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(min-width:620px){.tiles{grid-template-columns:repeat(3,1fr)}}
+.tile{border:0;text-align:left;color:var(--ink);background:var(--card);background:linear-gradient(150deg,color-mix(in srgb,var(--c1) 22%,var(--card)) 0%,var(--card) 62%);border-radius:var(--r);box-shadow:var(--sh);padding:14px;display:flex;flex-direction:column;gap:2px;min-height:132px;position:relative;overflow:hidden;transition:transform .12s}
+.tile:active{transform:scale(.97)}
+.tile .tt{font-weight:700;font-size:14px;margin-top:10px;line-height:1.25}
+.tile .tv{font-weight:850;font-size:20px;letter-spacing:-.01em}
+.tile .ts{font-size:12px;color:var(--mut);line-height:1.3}
+.tile .tplus{position:absolute;right:12px;top:12px;width:26px;height:26px;border-radius:9px;background:color-mix(in srgb,var(--c2) 16%,transparent);color:var(--c2);display:grid;place-items:center;font-weight:800;font-size:18px}
+.ic{width:42px;height:42px;flex:0 0 42px;border-radius:14px;background:linear-gradient(135deg,var(--c1),var(--c2));display:grid;place-items:center;font-size:21px;box-shadow:0 6px 14px color-mix(in srgb,var(--c2) 38%,transparent)}
+.ic.s{width:36px;height:36px;flex-basis:36px;border-radius:12px;font-size:18px}
+
+/* записи */
+.rec{display:flex;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);cursor:pointer}
+.rec:first-child{border-top:0}
+.rec .mid{flex:1;min-width:0}
+.rec .mid b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec .mid span{display:block;font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec .amt{text-align:right}
+.rec .amt b{display:block;font-size:16px;white-space:nowrap}
+.st{display:inline-block;font-size:11px;font-weight:750;border-radius:999px;padding:2px 8px;margin-top:3px;white-space:nowrap}
+.st.ok{background:var(--goodbg);color:var(--good)}.st.no{background:var(--badbg);color:var(--bad)}
+.mhead{display:flex;justify-content:space-between;align-items:baseline;margin:6px 2px 8px;font-weight:800;font-size:15px}
+.mhead span{color:var(--mut);font-weight:650;font-size:13px}
+.empty{text-align:center;padding:26px 10px;color:var(--mut)}
+.empty .e{font-size:44px;margin-bottom:6px}
+
+/* фильтры */
+.cchips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px;scrollbar-width:none}
+.cchips::-webkit-scrollbar{display:none}
+.cc{flex:0 0 auto;border:0;border-radius:999px;padding:8px 13px;font-weight:650;font-size:14px;background:var(--card2);color:var(--ink);display:flex;gap:6px;align-items:center;box-shadow:inset 0 0 0 1px var(--line)}
+.cc.on{background:linear-gradient(135deg,var(--c1,#8b5cf6),var(--c2,#7c3aed));color:#fff;box-shadow:0 6px 14px color-mix(in srgb,var(--c2,#7c3aed) 35%,transparent)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg{display:flex;background:var(--card2);border-radius:14px;padding:4px;gap:4px;box-shadow:inset 0 0 0 1px var(--line)}
+.seg button{flex:1;border:0;border-radius:10px;padding:8px 6px;background:none;color:var(--mut);font-weight:700;font-size:13.5px}
+.seg button.on{background:var(--card);color:var(--acc);box-shadow:0 2px 8px rgba(60,40,140,.12)}
+
+/* формы */
+.fld{margin-top:12px;min-width:0}
+.fld>label{display:block;font-size:12px;font-weight:750;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.in{width:100%;border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:14px;padding:11px 12px;font:16px/1.3 inherit;outline:none;-webkit-appearance:none;appearance:none;min-height:46px}
+select.in{background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+.in:focus{border-color:var(--acc);box-shadow:0 0 0 4px rgba(124,58,237,.15)}
+.in.big{font-size:22px;font-weight:800}
+textarea.in{min-height:70px;resize:vertical}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+@media(max-width:420px){.g4{grid-template-columns:1fr 1fr}}
+.g4 .fld,.g3 .fld{margin-top:6px}
+.g4 .fld>label,.g3 .fld>label{font-size:10.5px}
+.box{border-radius:18px;padding:12px;margin-top:12px;background:var(--card2);background:color-mix(in srgb,var(--c1,#8b5cf6) 11%,var(--card));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c2,#7c3aed) 18%,transparent)}
+.box .bh{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800;font-size:14px}
+.box .bh span{font-weight:700;color:var(--c2,var(--acc));font-size:13px;background:color-mix(in srgb,var(--c2,#7c3aed) 14%,transparent);padding:3px 9px;border-radius:999px;white-space:nowrap}
+.trow{background:var(--card);border-radius:14px;padding:10px;margin-top:8px}
+.trow .bh{font-size:13.5px}
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:14px 16px;font-weight:750;font-size:16px;line-height:1.2;background:var(--grad);color:#fff;text-align:center;text-decoration:none;box-shadow:0 8px 20px rgba(168,85,247,.30);margin-top:10px}
+.btn.sec{background:var(--card2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.danger{background:var(--badbg);color:var(--bad);box-shadow:none}
+.btn:disabled{opacity:.5}
+.brow{display:flex;gap:8px}.brow .btn{flex:1}
+.chk{display:flex;gap:10px;align-items:center;margin-top:12px;font-weight:650}
+.chk input{width:22px;height:22px;accent-color:var(--acc)}
+.more{border:0;background:none;color:var(--acc);font-weight:700;padding:12px 0 0;font-size:14.5px}
+.fcat{display:flex;gap:10px;align-items:center;font-size:17px}
+.photo{display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.photo img{width:76px;height:76px;object-fit:cover;border-radius:14px;box-shadow:var(--sh);cursor:zoom-in}
+.photo label.pb{display:inline-flex;align-items:center;gap:6px;border-radius:12px;padding:10px 13px;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line);font-weight:700;font-size:14px;cursor:pointer}
+
+/* нижнее меню */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;padding:6px 8px calc(8px + env(safe-area-inset-bottom));background:var(--card);background:color-mix(in srgb,var(--card) 84%,transparent);-webkit-backdrop-filter:saturate(1.7) blur(18px);backdrop-filter:saturate(1.7) blur(18px);box-shadow:0 -1px 0 var(--line),0 -8px 24px rgba(60,40,140,.06)}
+nav.tabs .in2{max-width:560px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 76px 1fr 1fr;align-items:end}
+nav.tabs button{border:0;background:none;font-weight:650;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0}
+nav.tabs button svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button.on{color:var(--acc)}
+nav.tabs .fab{width:60px;height:60px;border-radius:21px;background:var(--grad);color:#fff;font-size:32px;font-weight:300;margin:-28px auto 2px;box-shadow:0 10px 24px rgba(168,85,247,.45),0 0 0 5px var(--bg);display:grid;place-items:center;padding:0}
+nav.tabs .fab:active{transform:scale(.94)}
+
+/* шторка */
+#sheet{position:fixed;inset:0;z-index:100;display:none}
+#sheet.on{display:block}
+.sh-bg{position:absolute;inset:0;background:rgba(18,10,48,.46);animation:fade .2s}
+.sh{position:absolute;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;background:var(--card);border-radius:28px 28px 0 0;max-height:94vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:8px 18px calc(24px + env(safe-area-inset-bottom));animation:up .3s cubic-bezier(.2,.9,.3,1);box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+@media(min-width:760px){.sh{bottom:auto;top:4vh;border-radius:28px;max-height:92vh;animation:fade .2s}}
+.sh-grip{width:44px;height:5px;border-radius:3px;background:var(--line);margin:2px auto 8px}
+.shh{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:-8px;background:var(--card);padding:6px 0 8px;z-index:3}
+.shh h2{margin:0;font-size:21px;letter-spacing:-.01em}
+.x{border:0;background:var(--card2);color:var(--ink);width:36px;height:36px;border-radius:12px;font-size:22px;line-height:1;flex:0 0 36px}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14.5px;margin-top:10px}
+.dl dt{color:var(--mut)}.dl dd{margin:0;text-align:right;font-weight:650;word-break:break-word}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+.tbl td,.tbl th{padding:7px 4px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl th{color:var(--mut);font-weight:700;font-size:12px;border-top:0}
+.tbl td:first-child,.tbl th:first-child{text-align:left;white-space:normal}
+
+/* настройки */
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);cursor:pointer;width:100%;border-left:0;border-right:0;border-bottom:0;background:none;color:var(--ink);text-align:left;font-size:15.5px}
+.row:first-of-type{border-top:0}
+.row .rt{flex:1;min-width:0}.row .rt span{display:block;font-size:12.5px;color:var(--mut)}
+.row .chev{color:var(--mut);font-size:20px}
+.row .ri{width:34px;height:34px;flex:0 0 34px;border-radius:11px;display:grid;place-items:center;font-size:17px;background:var(--card2)}
+.lock{font-size:11px;font-weight:800;color:#fff;background:var(--grad);border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:2px}
+.catl{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.catl:first-child{border-top:0}
+.catl .nm{flex:1;min-width:0;font-weight:650}
+.catl .nm span{display:block;font-size:12px;color:var(--mut);font-weight:500}
+.mini{border:0;background:var(--card2);color:var(--ink);border-radius:10px;width:34px;height:34px;font-size:15px;flex:0 0 34px}
+.sw{position:relative;width:48px;height:28px;flex:0 0 48px}
+.sw input{opacity:0;width:0;height:0}
+.sw i{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:.2s}
+.sw i:after{content:'';position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:.2s}
+.sw input:checked+i{background:linear-gradient(135deg,#8b5cf6,#d946ef)}
+.sw input:checked+i:after{transform:translateX(20px)}
+.emo{display:flex;gap:6px;flex-wrap:wrap}
+.emo button{border:0;width:44px;height:44px;border-radius:13px;background:var(--card2);font-size:22px;box-shadow:inset 0 0 0 1px var(--line)}
+.emo button.on{box-shadow:inset 0 0 0 2px var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--card))}
+
+/* аналитика */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.kpi{border-radius:20px;padding:13px 14px;color:#fff;box-shadow:var(--sh)}
+.kpi span{display:block;font-size:12.5px;opacity:.9;font-weight:650}
+.kpi b{display:block;font-size:clamp(16px,5.2vw,21px);font-weight:850;letter-spacing:-.01em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart{width:100%;height:auto;display:block}
+.chart text{font:10px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;fill:var(--mut)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.leg{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.leg div{display:flex;align-items:center;gap:9px;font-size:14px}
+.leg i{width:12px;height:12px;border-radius:4px;flex:0 0 12px}
+.leg span{flex:1}.leg b{white-space:nowrap}.leg em{font-style:normal;color:var(--mut);font-size:12.5px;width:40px;text-align:right}
+.donut{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.donut svg{width:150px;height:150px;flex:0 0 150px;margin:0 auto}
+.donut .leg{flex:1;min-width:190px;margin:0}
+.locked{position:relative;min-height:340px}
+.locked .blur{filter:blur(7px);opacity:.55;pointer-events:none;user-select:none}
+.locked .lc{position:absolute;left:0;right:0;top:30px;margin:0 auto;max-width:360px;text-align:center}
+.up{color:var(--bad)}.down{color:var(--good)}
+
+#toast{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:#1f1b3d;color:#fff;padding:11px 16px;border-radius:14px;font-weight:650;font-size:14.5px;opacity:0;pointer-events:none;transition:.25s;z-index:200;max-width:90vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#toast.on{opacity:1;transform:translateX(-50%)}
+.foot{text-align:center;color:var(--mut);font-size:12.5px;margin:18px 0 6px}
+#proBox{background:var(--card)!important;color:var(--ink)!important}
+#proBox .pro-b{background:var(--grad)}#proBox .pro-b.sec{background:rgba(127,127,127,.15)}
+.pro-card .pro-b{background:var(--grad)}.pro-card .pro-b.sec{background:rgba(127,127,127,.15);color:inherit}
+.pro-card{background:linear-gradient(140deg,color-mix(in srgb,#8b5cf6 14%,var(--card)),var(--card) 70%)}
+</style>
 </head>
-<body class="h-full text-slate-800">
-    <div id="app" class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-indigo-600 p-2 rounded-lg text-white">
-                        <i class="fa-solid fa-file-invoice-dollar text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-lg leading-tight">КоммунУчет EUR</h1>
-                        <p class="text-xs text-slate-400">Учет платежей, электроэнергии и налогов</p>
-                    </div>
-                </div>
-
-                <!-- Action Toolbar -->
-                <div class="flex items-center space-x-2">
-                    <button @click="openSettingsModal" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center shadow-sm">
-                        <i class="fa-solid fa-gear mr-1.5 text-indigo-400"></i>
-                        <span class="hidden sm:inline">Настройки тарифов</span>
-                    </button>
-                    <button @click="openModal('add')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center shadow-sm">
-                        <i class="fa-solid fa-plus mr-1.5"></i>
-                        <span>Добавить запись</span>
-                    </button>
-                    <div class="relative">
-                        <button @click="showMenu = !showMenu" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-lg text-sm transition border border-slate-700">
-                            <i class="fa-solid fa-ellipsis-vertical px-1"></i>
-                        </button>
-                        <div v-if="showMenu" @click.away="showMenu = false" class="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-xl py-1 text-slate-700 z-40 border border-slate-100">
-                            <button @click="openSettingsModal(); showMenu = false" class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center">
-                                <i class="fa-solid fa-gear mr-2 text-slate-400"></i> Настройки тарифов
-                            </button>
-                            <button @click="exportJSON" class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center">
-                                <i class="fa-solid fa-download mr-2 text-slate-400"></i> Экспорт (JSON)
-                            </button>
-                            <label class="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center cursor-pointer">
-                                <i class="fa-solid fa-upload mr-2 text-slate-400"></i> Импорт (JSON)
-                                <input type="file" @change="importJSON" accept=".json" class="hidden">
-                            </label>
-                            <hr class="my-1 border-slate-100">
-                            <button @click="confirmClear" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center">
-                                <i class="fa-solid fa-trash mr-2 text-red-400"></i> Сбросить данные
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-            
-            <!-- Dashboard Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Всего за месяц</span>
-                        <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fa-solid fa-calendar-days"></i></span>
-                    </div>
-                    <div class="mt-2 flex items-baseline">
-                        <span class="text-2xl font-bold text-slate-900">€ {{ stats.thisMonthTotal.toFixed(2) }}</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1">Расходы за текущий месяц</p>
-                </div>
-
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Электричество</span>
-                        <span class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i class="fa-solid fa-bolt"></i></span>
-                    </div>
-                    <div class="mt-2 flex items-baseline">
-                        <span class="text-2xl font-bold text-slate-900">€ {{ stats.electricityTotal.toFixed(2) }}</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1">3 тарифа (День 1 / День 2 / Ночь)</p>
-                </div>
-
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-sky-600 uppercase tracking-wider">Вода</span>
-                        <span class="p-2 bg-sky-50 text-sky-600 rounded-lg"><i class="fa-solid fa-droplet"></i></span>
-                    </div>
-                    <div class="mt-2 flex items-baseline">
-                        <span class="text-2xl font-bold text-slate-900">€ {{ stats.waterTotal.toFixed(2) }}</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1">Потребление и водоотведение</p>
-                </div>
-
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Налоги</span>
-                        <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i class="fa-solid fa-building-columns"></i></span>
-                    </div>
-                    <div class="mt-2 flex items-baseline">
-                        <span class="text-2xl font-bold text-slate-900">€ {{ stats.taxesTotal.toFixed(2) }}</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-1">Недвижимость и такса смет</p>
-                </div>
-            </div>
-
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-800 mb-4 flex items-center">
-                        <i class="fa-solid fa-chart-line text-indigo-500 mr-2"></i> Динамика расходов по месяцах (€)
-                    </h2>
-                    <div class="h-64">
-                        <canvas id="expensesChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
-                    <h2 class="text-base font-semibold text-slate-800 mb-4 flex items-center">
-                        <i class="fa-solid fa-chart-pie text-indigo-500 mr-2"></i> Доли расходов
-                    </h2>
-                    <div class="h-64 flex items-center justify-center">
-                        <canvas id="pieChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Bar -->
-            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
-                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                    <select v-model="filters.category" class="bg-slate-50 border border-slate-300 text-slate-700 text-sm rounded-lg p-2.5 focus:ring-indigo-500">
-                        <option value="all">Все категории</option>
-                        <option value="electricity">Электроэнергия</option>
-                        <option value="water">Водоснабжение</option>
-                        <option value="property_tax">Налог на недвижимость</option>
-                        <option value="garbage_tax">Налог на мусор (Такса смет)</option>
-                    </select>
-
-                    <input type="month" v-model="filters.month" class="bg-slate-50 border border-slate-300 text-slate-700 text-sm rounded-lg p-2 focus:ring-indigo-500">
-                    <button v-if="filters.month || filters.category !== 'all' || filters.search" @click="resetFilters" class="text-xs text-indigo-600 hover:text-indigo-800 px-2 font-medium">
-                        Сбросить фильтры
-                    </button>
-                </div>
-
-                <div class="relative w-full md:w-64">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
-                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
-                    </div>
-                    <input type="text" v-model="filters.search" placeholder="Поиск по заметкам..." class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg block w-full pl-9 p-2.5">
-                </div>
-            </div>
-
-            <!-- Records History -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <h3 class="font-semibold text-slate-800">История платежей и показаний</h3>
-                    <span class="text-xs text-slate-500">Всего записей: {{ filteredRecords.length }}</span>
-                </div>
-
-                <div v-if="filteredRecords.length === 0" class="text-center py-12 px-4">
-                    <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3"></i>
-                    <p class="text-slate-500 text-sm">Записи не найдены. Нажмите "Добавить запись", чтобы внести новые показания.</p>
-                </div>
-
-                <div v-else class="divide-y divide-slate-100">
-                    <div v-for="record in filteredRecords" :key="record.id" class="p-4 sm:p-6 hover:bg-slate-50/80 transition flex flex-col md:flex-row justify-between gap-4">
-                        
-                        <div class="flex items-start space-x-4">
-                            <div class="p-3 rounded-xl flex-shrink-0" :class="getCategoryBadgeClass(record.category)">
-                                <i :class="getCategoryIcon(record.category)" class="text-xl"></i>
-                            </div>
-
-                            <div class="space-y-1">
-                                <div class="flex items-center space-x-2 flex-wrap">
-                                    <span class="font-bold text-slate-900">{{ getCategoryTitle(record.category) }}</span>
-                                    <span class="text-xs text-slate-500 px-2 py-0.5 bg-slate-100 rounded-full">
-                                        <i class="fa-regular fa-calendar mr-1"></i>Учет: {{ formatDate(record.date) }}
-                                    </span>
-                                    <span v-if="record.paymentCard" class="text-xs text-slate-600 px-2 py-0.5 bg-indigo-50 border border-indigo-100 rounded-full font-medium">
-                                        <i class="fa-regular fa-credit-card mr-1 text-indigo-500"></i>{{ record.paymentCard }}
-                                    </span>
-                                </div>
-
-                                <!-- Date Periods Detail -->
-                                <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500 mt-1">
-                                    <span v-if="record.periodStart && record.periodEnd">
-                                        <i class="fa-regular fa-clock mr-1 text-slate-400"></i>Период: <strong>{{ formatDate(record.periodStart) }} — {{ formatDate(record.periodEnd) }}</strong>
-                                    </span>
-                                    <span v-if="record.invoiceDate">
-                                        <i class="fa-regular fa-file-lines mr-1 text-slate-400"></i>Счет от: {{ formatDate(record.invoiceDate) }}
-                                    </span>
-                                    <span v-if="record.paymentDate">
-                                        <i class="fa-regular fa-circle-check mr-1 text-emerald-500"></i>Оплачен: {{ formatDate(record.paymentDate) }}
-                                    </span>
-                                </div>
-
-                                <div class="text-xs text-slate-600 space-y-1 mt-2">
-                                    <!-- ELECTRICITY SHOW SUMMARY -->
-                                    <template v-if="record.category === 'electricity'">
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 mt-2">
-                                            <div class="bg-white p-2 rounded border border-amber-100">
-                                                <div class="font-semibold text-amber-800">T1 (Дневной 1 / Пик)</div>
-                                                <div>{{ getUsage(record.electricity.t1_old, record.electricity.t1_new) }} кВт⋅ч</div>
-                                                <div class="text-[11px] text-slate-400">({{ record.electricity.t1_old }} → {{ record.electricity.t1_new }})</div>
-                                                <div class="text-[11px] text-amber-700 font-medium mt-1">€ {{ record.electricity.t1_rate }}/кВт | € {{ Number(record.electricity.t1_sum || 0).toFixed(2) }}</div>
-                                            </div>
-
-                                            <div class="bg-white p-2 rounded border border-amber-100">
-                                                <div class="font-semibold text-amber-800">T2 (Дневной 2 / Полупик)</div>
-                                                <div>{{ getUsage(record.electricity.t2_old, record.electricity.t2_new) }} кВт⋅ч</div>
-                                                <div class="text-[11px] text-slate-400">({{ record.electricity.t2_old }} → {{ record.electricity.t2_new }})</div>
-                                                <div class="text-[11px] text-amber-700 font-medium mt-1">€ {{ record.electricity.t2_rate }}/кВт | € {{ Number(record.electricity.t2_sum || 0).toFixed(2) }}</div>
-                                            </div>
-
-                                            <div class="bg-white p-2 rounded border border-amber-100">
-                                                <div class="font-semibold text-amber-800">T3 (Ночной)</div>
-                                                <div>{{ getUsage(record.electricity.t3_old, record.electricity.t3_new) }} кВт⋅ч</div>
-                                                <div class="text-[11px] text-slate-400">({{ record.electricity.t3_old }} → {{ record.electricity.t3_new }})</div>
-                                                <div class="text-[11px] text-amber-700 font-medium mt-1">€ {{ record.electricity.t3_rate }}/кВт | € {{ Number(record.electricity.t3_sum || 0).toFixed(2) }}</div>
-                                            </div>
-                                        </div>
-                                    </template>
-
-                                    <!-- WATER SUMMARY -->
-                                    <template v-if="record.category === 'water'">
-                                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200 mt-2 text-xs">
-                                            <span class="font-medium text-sky-700">Расход воды:</span> 
-                                            <span>{{ getUsage(record.water.old_reading, record.water.new_reading) }} m³</span>
-                                            <span class="text-slate-400 ml-1">({{ record.water.old_reading }} → {{ record.water.new_reading }} m³)</span>
-                                            <span class="ml-3 text-slate-600 font-medium">Тариф: € {{ record.water.rate }}/m³</span>
-                                        </div>
-                                    </template>
-
-                                    <!-- TAX SUMMARY -->
-                                    <template v-if="record.category === 'property_tax' || record.category === 'garbage_tax'">
-                                        <div class="text-slate-600 mt-1">
-                                            <span>Период: <strong>{{ record.taxPeriod || 'Годовой/Квартальный' }}</strong></span>
-                                        </div>
-                                    </template>
-
-                                    <p v-if="record.notes" class="text-slate-500 italic mt-1">
-                                        <i class="fa-regular fa-comment mr-1"></i>{{ record.notes }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Amount & Actions -->
-                        <div class="flex flex-row md:flex-col justify-between md:items-end items-center pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-                            <div class="text-right">
-                                <div class="text-lg font-bold text-slate-900">€ {{ Number(record.totalWithVat).toFixed(2) }}</div>
-                                <div class="text-xs text-slate-400">
-                                    Без НДС: € {{ Number(record.totalWithoutVat).toFixed(2) }} 
-                                    <span class="ml-1 px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded">НДС {{ record.vatRate }}%</span>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center space-x-2 mt-2">
-                                <button v-if="record.photo" @click="viewImage(record.photo)" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200 flex items-center transition">
-                                    <i class="fa-solid fa-paperclip mr-1"></i> Скан / Чек
-                                </button>
-                                <button @click="editRecord(record)" class="text-slate-400 hover:text-slate-600 p-1.5 rounded hover:bg-slate-100 transition">
-                                    <i class="fa-solid fa-pen text-sm"></i>
-                                </button>
-                                <button @click="deleteRecord(record.id)" class="text-slate-400 hover:text-red-600 p-1.5 rounded hover:bg-slate-100 transition">
-                                    <i class="fa-solid fa-trash-can text-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Tariff Settings Modal -->
-        <div v-if="isSettingsOpen" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden transform transition-all my-8">
-                <div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
-                    <h3 class="text-lg font-bold flex items-center">
-                        <i class="fa-solid fa-sliders text-indigo-400 mr-2"></i> Управление базовыми тарифами
-                    </h3>
-                    <button @click="isSettingsOpen = false" class="text-slate-400 hover:text-white transition">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-
-                <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-                    <!-- Form for new tariff plan -->
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
-                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Добавить изменение тарифов (действует с определенного месяца)</h4>
-                        
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Месяц вступления в силу</label>
-                            <input type="month" v-model="newTariffRule.effectiveMonth" required class="bg-white border border-slate-300 text-slate-800 text-sm rounded-lg p-2 w-full">
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div class="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                                <label class="text-[11px] font-semibold text-amber-800 block">Т1 (Дневной 1) €/кВт</label>
-                                <input type="number" step="any" v-model.number="newTariffRule.electricity.t1_rate" placeholder="0.0000" class="text-xs border p-2 rounded w-full">
-                            </div>
-                            <div class="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                                <label class="text-[11px] font-semibold text-amber-800 block">Т2 (Дневной 2) €/кВт</label>
-                                <input type="number" step="any" v-model.number="newTariffRule.electricity.t2_rate" placeholder="0.0000" class="text-xs border p-2 rounded w-full">
-                            </div>
-                            <div class="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                                <label class="text-[11px] font-semibold text-amber-800 block">Т3 (Ночной) €/кВт</label>
-                                <input type="number" step="any" v-model.number="newTariffRule.electricity.t3_rate" placeholder="0.0000" class="text-xs border p-2 rounded w-full">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-sky-700 uppercase mb-1">Водоснабжение (€/м³ без НДС)</label>
-                            <input type="number" step="any" v-model.number="newTariffRule.waterRate" placeholder="1.50" class="bg-white border border-slate-300 text-slate-800 text-sm rounded-lg p-2 w-full">
-                        </div>
-
-                        <button @click="addTariffRule" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg text-sm transition">
-                            Сохранить тарифный план
-                        </button>
-                    </div>
-
-                    <!-- Tariff History List -->
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">История действующих тарифных планов</h4>
-                        <div class="divide-y divide-slate-100 border rounded-xl overflow-hidden">
-                            <div v-for="(rule, idx) in sortedTariffRules" :key="idx" class="p-3 bg-white flex justify-between items-center text-xs">
-                                <div>
-                                    <div class="font-bold text-slate-800">Действует с: {{ rule.effectiveMonth }}</div>
-                                    <div class="text-slate-500 mt-0.5">
-                                        ⚡ T1: {{ rule.electricity.t1_rate }} € | T2: {{ rule.electricity.t2_rate }} € | T3: {{ rule.electricity.t3_rate }} €
-                                    </div>
-                                    <div class="text-sky-600 font-medium">💧 Вода: {{ rule.waterRate }} €/m³</div>
-                                </div>
-                                <button v-if="tariffRules.length > 1" @click="removeTariffRule(idx)" class="text-red-500 hover:text-red-700 p-1">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-slate-50 px-6 py-3 flex justify-end">
-                    <button @click="isSettingsOpen = false" class="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700">Закрыть</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Form Modal (Add / Edit) -->
-        <div v-if="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden transform transition-all my-8">
-                <div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
-                    <h3 class="text-lg font-bold">
-                        {{ modalMode === 'add' ? 'Новый счет / показания' : 'Редактировать запись' }}
-                    </h3>
-                    <button @click="closeModal" class="text-slate-400 hover:text-white transition">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-
-                <form @submit.prevent="saveRecord" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                    
-                    <!-- Category & Main Date -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Категория</label>
-                            <select v-model="form.category" @change="onCategoryOrDateChange" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500">
-                                <option value="electricity">⚡ Электроэнергия (3 тарифа)</option>
-                                <option value="water">💧 Водоснабжение</option>
-                                <option value="property_tax">🏛️ Налог на недвижимость</option>
-                                <option value="garbage_tax">🗑️ Налог на мусор (Такса смет)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Дата учета / записи</label>
-                            <input type="date" v-model="form.date" @change="onCategoryOrDateChange" required class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                    </div>
-
-                    <!-- BILLING PERIOD DATES AND PAYMENT CARD -->
-                    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
-                        <div class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center">
-                            <i class="fa-regular fa-calendar-check mr-1.5 text-indigo-600"></i> Расчетный период и сведения об оплате
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-[11px] font-medium text-slate-600">Начало расчетного периода</label>
-                                <input type="date" v-model="form.periodStart" class="w-full text-xs border p-2 rounded-lg bg-white mt-0.5">
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-medium text-slate-600">Окончание расчетного периода</label>
-                                <input type="date" v-model="form.periodEnd" class="w-full text-xs border p-2 rounded-lg bg-white mt-0.5">
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-medium text-slate-600">Дата выставления счета</label>
-                                <input type="date" v-model="form.invoiceDate" class="w-full text-xs border p-2 rounded-lg bg-white mt-0.5">
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-medium text-slate-600">Дата факта оплаты</label>
-                                <input type="date" v-model="form.paymentDate" class="w-full text-xs border p-2 rounded-lg bg-white mt-0.5">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="text-[11px] font-medium text-slate-600">Карта оплаты / Способ платежа</label>
-                            <input type="text" v-model="form.paymentCard" placeholder="Например: Visa *4589 или Revolut" class="w-full text-xs border p-2 rounded-lg bg-white mt-0.5">
-                        </div>
-                    </div>
-
-                    <!-- ELECTRICITY FORM (T1, T2, T3 ORDERED + EDITABLE SUMS) -->
-                    <div v-if="form.category === 'electricity'" class="bg-amber-50/60 p-4 rounded-xl border border-amber-200 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <div class="text-xs font-bold text-amber-900 uppercase tracking-wider">
-                                <i class="fa-solid fa-bolt mr-1"></i> Расчет по 3-м тарифам (кВт⋅ч)
-                            </div>
-                            <div class="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-                                Итого кВт⋅ч: {{ totalElectricityKwh }}
-                            </div>
-                        </div>
-
-                        <!-- T1 (Дневной 1 / Пик) -->
-                        <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
-                            <div class="flex justify-between text-xs font-bold text-slate-700">
-                                <span>Т1 (Дневной 1 / Пик)</span>
-                                <span class="text-amber-700">Израсходовано: {{ getUsage(form.electricity.t1_old, form.electricity.t1_new) }} кВт⋅ч</span>
-                            </div>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                <div>
-                                    <label class="text-[10px] text-slate-400">Старое показание</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t1_old" @input="calculateElectricitySum" placeholder="Старое" class="text-xs border p-1.5 rounded w-full">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400">Новое показание</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t1_new" @input="calculateElectricitySum" placeholder="Новое" class="text-xs border p-1.5 rounded w-full font-bold">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400">Тариф (€ без НДС)</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t1_rate" @input="calculateElectricitySum" placeholder="Цена" class="text-xs border p-1.5 rounded w-full">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-amber-800 font-semibold">Сумма Т1 (€)</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t1_sum" @input="onManualTariffSumChange" placeholder="Сумма" class="text-xs border border-amber-300 bg-amber-50/40 p-1.5 rounded w-full font-bold">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- T2 (Дневной 2 / Полупик) -->
-                        <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
-                            <div class="flex justify-between text-xs font-bold text-slate-700">
-                                <span>Т2 (Дневной 2 / Полупик)</span>
-                                <span class="text-amber-700">Израсходовано: {{ getUsage(form.electricity.t2_old, form.electricity.t2_new) }} кВт⋅ч</span>
-                            </div>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                <div>
-                                    <label class="text-[10px] text-slate-400">Старое показание</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t2_old" @input="calculateElectricitySum" placeholder="Старое" class="text-xs border p-1.5 rounded w-full">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400">Новое показание</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t2_new" @input="calculateElectricitySum" placeholder="Новое" class="text-xs border p-1.5 rounded w-full font-bold">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400">Тариф (€ без НДС)</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t2_rate" @input="calculateElectricitySum" placeholder="Цена" class="text-xs border p-1.5 rounded w-full">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-amber-800 font-semibold">Сумма Т2 (€)</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t2_sum" @input="onManualTariffSumChange" placeholder="Сумма" class="text-xs border border-amber-300 bg-amber-50/40 p-1.5 rounded w-full font-bold">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- T3 (Ночной) -->
-                        <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
-                            <div class="flex justify-between text-xs font-bold text-slate-700">
-                                <span>Т3 (Ночной)</span>
-                                <span class="text-amber-700">Израсходовано: {{ getUsage(form.electricity.t3_old, form.electricity.t3_new) }} кВт⋅ч</span>
-                            </div>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                <div>
-                                    <label class="text-[10px] text-slate-400">Старое показание</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t3_old" @input="calculateElectricitySum" placeholder="Старое" class="text-xs border p-1.5 rounded w-full">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400">Новое показание</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t3_new" @input="calculateElectricitySum" placeholder="Новое" class="text-xs border p-1.5 rounded w-full font-bold">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-400">Тариф (€ без НДС)</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t3_rate" @input="calculateElectricitySum" placeholder="Цена" class="text-xs border p-1.5 rounded w-full">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-amber-800 font-semibold">Сумма Т3 (€)</label>
-                                    <input type="number" step="any" v-model.number="form.electricity.t3_sum" @input="onManualTariffSumChange" placeholder="Сумма" class="text-xs border border-amber-300 bg-amber-50/40 p-1.5 rounded w-full font-bold">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- WATER SPECIFIC INPUTS -->
-                    <div v-if="form.category === 'water'" class="bg-sky-50/60 p-4 rounded-xl border border-sky-200 space-y-3">
-                        <div class="text-xs font-bold text-sky-800 uppercase tracking-wider flex items-center">
-                            <i class="fa-solid fa-droplet mr-1.5"></i> Показания водомера (м³)
-                        </div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="text-xs text-slate-600">Старые показания</label>
-                                <input type="number" step="any" v-model.number="form.water.old_reading" @input="calculateWaterSum" class="w-full text-xs border p-2 rounded-lg mt-1">
-                            </div>
-                            <div>
-                                <label class="text-xs text-slate-600">Новые показания</label>
-                                <input type="number" step="any" v-model.number="form.water.new_reading" @input="calculateWaterSum" class="w-full text-xs border p-2 rounded-lg mt-1">
-                            </div>
-                            <div>
-                                <label class="text-xs text-slate-600">Тариф (€/м³ без НДС)</label>
-                                <input type="number" step="any" v-model.number="form.water.rate" @input="calculateWaterSum" class="w-full text-xs border p-2 rounded-lg mt-1">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TAX SPECIFIC INPUTS -->
-                    <div v-if="form.category === 'property_tax' || form.category === 'garbage_tax'" class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200">
-                        <label class="text-xs font-semibold text-emerald-800 uppercase block mb-1">Период оплаты налогового взноса</label>
-                        <input type="text" v-model="form.taxPeriod" placeholder="Например: 1-й квартал 2026 или Год 2026" class="w-full text-sm border border-emerald-200 p-2.5 rounded-lg">
-                    </div>
-
-                    <!-- FINANCIAL & VAT CALCULATIONS -->
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-slate-700 uppercase">Финансовые расчеты (€)</span>
-                            <div class="flex items-center space-x-2">
-                                <label class="text-xs text-slate-600">Ставка НДС %:</label>
-                                <input type="number" v-model.number="form.vatRate" @input="recalculateVAT" class="w-16 text-xs border p-1 rounded text-center">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs text-slate-600 mb-1">Общая сумма без НДС (€)</label>
-                                <input type="number" step="any" v-model.number="form.totalWithoutVat" @input="onWithoutVatInput" required class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-indigo-700 mb-1">Итого С НДС (€)</label>
-                                <input type="number" step="any" v-model.number="form.totalWithVat" @input="onWithVatInput" required class="w-full bg-indigo-50/60 border border-indigo-300 text-slate-900 font-bold text-sm rounded-lg p-2.5">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ATTACHMENT / PHOTO SCAN -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Фотография / Скан квитанции или счетчика</label>
-                        <div class="flex items-center space-x-4">
-                            <input type="file" accept="image/*" @change="handleFileUpload" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                            <button v-if="form.photo" type="button" @click="form.photo = null" class="text-xs text-red-500 hover:underline">
-                                Удалить фото
-                            </button>
-                        </div>
-                        <div v-if="form.photo" class="mt-2 relative w-20 h-20 border rounded-lg overflow-hidden">
-                            <img :src="form.photo" class="w-full h-full object-cover">
-                        </div>
-                    </div>
-
-                    <!-- NOTES -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Примечания / Комментарии</label>
-                        <textarea v-model="form.notes" rows="2" placeholder="Дополнительные комментарии..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5"></textarea>
-                    </div>
-
-                    <!-- Buttons -->
-                    <div class="flex justify-end space-x-3 pt-3 border-t border-slate-100">
-                        <button type="button" @click="closeModal" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Отмена</button>
-                        <button type="submit" class="px-5 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium shadow-sm">
-                            Сохранить
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Image Viewer Modal -->
-        <div v-if="activeImage" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4" @click="activeImage = null">
-            <div class="relative max-w-4xl max-h-[90vh] bg-transparent flex flex-col items-center">
-                <img :src="activeImage" class="max-w-full max-h-[80vh] rounded-lg shadow-2xl object-contain">
-                <button @click="activeImage = null" class="mt-4 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm font-medium transition">
-                    Закрыть просмотр
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const { createApp, markRaw } = Vue;
-
-        createApp({
-            data() {
-                return {
-                    showMenu: false,
-                    isModalOpen: false,
-                    isSettingsOpen: false,
-                    modalMode: 'add',
-                    activeImage: null,
-                    
-                    filters: {
-                        category: 'all',
-                        month: '',
-                        search: ''
-                    },
-
-                    tariffRules: [
-                        {
-                            effectiveMonth: '2025-01',
-                            electricity: { t1_rate: 0.145829, t2_rate: 0.112450, t3_rate: 0.078912 },
-                            waterRate: 1.50
-                        }
-                    ],
-
-                    newTariffRule: {
-                        effectiveMonth: new Date().toISOString().substring(0, 7),
-                        electricity: { t1_rate: 0.15, t2_rate: 0.12, t3_rate: 0.08 },
-                        waterRate: 1.50
-                    },
-
-                    form: {
-                        id: null,
-                        category: 'electricity',
-                        date: new Date().toISOString().substring(0, 10),
-                        periodStart: '',
-                        periodEnd: '',
-                        invoiceDate: '',
-                        paymentDate: '',
-                        paymentCard: '',
-                        vatRate: 20,
-                        totalWithoutVat: 0,
-                        totalWithVat: 0,
-                        notes: '',
-                        photo: null,
-                        electricity: {
-                            t1_old: 0, t1_new: 0, t1_rate: 0.15, t1_sum: 0,
-                            t2_old: 0, t2_new: 0, t2_rate: 0.12, t2_sum: 0,
-                            t3_old: 0, t3_new: 0, t3_rate: 0.08, t3_sum: 0
-                        },
-                        water: { old_reading: 0, new_reading: 0, rate: 1.50 },
-                        taxPeriod: ''
-                    },
-
-                    records: [],
-                    lineChart: null,
-                    pieChart: null
-                }
-            },
-
-            computed: {
-                sortedTariffRules() {
-                    return [...this.tariffRules].sort((a, b) => b.effectiveMonth.localeCompare(a.effectiveMonth));
-                },
-
-                filteredRecords() {
-                    return this.records.filter(r => {
-                        if (this.filters.category !== 'all' && r.category !== this.filters.category) return false;
-                        if (this.filters.month && !r.date.startsWith(this.filters.month)) return false;
-                        if (this.filters.search) {
-                            const query = this.filters.search.toLowerCase();
-                            const notesMatch = r.notes && r.notes.toLowerCase().includes(query);
-                            const categoryMatch = this.getCategoryTitle(r.category).toLowerCase().includes(query);
-                            const cardMatch = r.paymentCard && r.paymentCard.toLowerCase().includes(query);
-                            if (!notesMatch && !categoryMatch && !cardMatch) return false;
-                        }
-                        return true;
-                    }).sort((a, b) => new Date(b.date) - new Date(a.date));
-                },
-
-                stats() {
-                    const currentMonthStr = new Date().toISOString().substring(0, 7);
-                    let thisMonthTotal = 0;
-                    let electricityTotal = 0;
-                    let waterTotal = 0;
-                    let taxesTotal = 0;
-
-                    this.records.forEach(r => {
-                        const amount = Number(r.totalWithVat) || 0;
-                        if (r.date.startsWith(currentMonthStr)) {
-                            thisMonthTotal += amount;
-                        }
-                        if (r.category === 'electricity') electricityTotal += amount;
-                        if (r.category === 'water') waterTotal += amount;
-                        if (r.category === 'property_tax' || r.category === 'garbage_tax') taxesTotal += amount;
-                    });
-
-                    return { thisMonthTotal, electricityTotal, waterTotal, taxesTotal };
-                },
-
-                totalElectricityKwh() {
-                    if (this.form.category !== 'electricity') return 0;
-                    const e = this.form.electricity;
-                    const u1 = Math.max(0, (e.t1_new || 0) - (e.t1_old || 0));
-                    const u2 = Math.max(0, (e.t2_new || 0) - (e.t2_old || 0));
-                    const u3 = Math.max(0, (e.t3_new || 0) - (e.t3_old || 0));
-                    return Number((u1 + u2 + u3).toFixed(2));
-                }
-            },
-
-            mounted() {
-                this.loadSettings();
-                this.loadRecords();
-                this.initCharts();
-            },
-
-            methods: {
-                loadSettings() {
-                    const savedTariffs = localStorage.getItem('utility_tariff_rules');
-                    if (savedTariffs) {
-                        try {
-                            this.tariffRules = JSON.parse(savedTariffs);
-                        } catch(e) {
-                            console.error('Ошибка загрузки настроек тарифов:', e);
-                        }
-                    }
-                },
-
-                saveSettings() {
-                    localStorage.setItem('utility_tariff_rules', JSON.stringify(this.tariffRules));
-                },
-
-                openSettingsModal() {
-                    this.isSettingsOpen = true;
-                },
-
-                addTariffRule() {
-                    if (!this.newTariffRule.effectiveMonth) return;
-                    const existingIdx = this.tariffRules.findIndex(r => r.effectiveMonth === this.newTariffRule.effectiveMonth);
-                    const ruleCopy = JSON.parse(JSON.stringify(this.newTariffRule));
-                    if (existingIdx !== -1) {
-                        this.tariffRules[existingIdx] = ruleCopy;
-                    } else {
-                        this.tariffRules.push(ruleCopy);
-                    }
-                    this.saveSettings();
-                    alert('Тарифный план сохранен!');
-                },
-
-                removeTariffRule(index) {
-                    this.tariffRules.splice(index, 1);
-                    this.saveSettings();
-                },
-
-                getTariffForDate(dateStr, category) {
-                    const month = dateStr ? dateStr.substring(0, 7) : new Date().toISOString().substring(0, 7);
-                    const sorted = [...this.tariffRules].sort((a, b) => b.effectiveMonth.localeCompare(a.effectiveMonth));
-                    const matched = sorted.find(r => r.effectiveMonth <= month) || sorted[sorted.length - 1];
-                    return matched;
-                },
-
-                loadRecords() {
-                    const saved = localStorage.getItem('utility_records_data');
-                    if (saved) {
-                        try {
-                            this.records = JSON.parse(saved);
-                        } catch(e) {
-                            console.error('Ошибка загрузки данных:', e);
-                        }
-                    } else {
-                        this.records = [
-                            {
-                                id: '1',
-                                category: 'electricity',
-                                date: new Date().toISOString().substring(0, 10),
-                                periodStart: '2026-01-01',
-                                periodEnd: '2026-01-31',
-                                invoiceDate: '2026-02-02',
-                                paymentDate: '2026-02-05',
-                                paymentCard: 'Visa *4589',
-                                vatRate: 20,
-                                totalWithoutVat: 53.70,
-                                totalWithVat: 64.44,
-                                notes: 'Пример сведений о коммунальных платежах',
-                                photo: null,
-                                electricity: { 
-                                    t1_old: 1000, t1_new: 1200, t1_rate: 0.145829, t1_sum: 29.17, 
-                                    t2_old: 500, t2_new: 650, t2_rate: 0.112450, t2_sum: 16.87, 
-                                    t3_old: 300, t3_new: 400, t3_rate: 0.078912, t3_sum: 7.89 
-                                },
-                                water: { old_reading: 0, new_reading: 0, rate: 1.5 },
-                                taxPeriod: ''
-                            }
-                        ];
-                        this.saveToLocalStorage();
-                    }
-                },
-
-                saveToLocalStorage() {
-                    localStorage.setItem('utility_records_data', JSON.stringify(this.records));
-                    this.updateCharts();
-                },
-
-                getUsage(oldVal, newVal) {
-                    const diff = (Number(newVal) || 0) - (Number(oldVal) || 0);
-                    return diff > 0 ? Number(diff.toFixed(2)) : 0;
-                },
-
-                onCategoryOrDateChange() {
-                    if (this.modalMode === 'add') {
-                        this.applyDefaultTariffs();
-                        this.autoFillPreviousReadings();
-                    }
-                },
-
-                applyDefaultTariffs() {
-                    const activeRule = this.getTariffForDate(this.form.date, this.form.category);
-                    if (activeRule) {
-                        if (this.form.category === 'electricity') {
-                            this.form.electricity.t1_rate = activeRule.electricity.t1_rate;
-                            this.form.electricity.t2_rate = activeRule.electricity.t2_rate;
-                            this.form.electricity.t3_rate = activeRule.electricity.t3_rate;
-                        } else if (this.form.category === 'water') {
-                            this.form.water.rate = activeRule.waterRate;
-                        }
-                    }
-                },
-
-                autoFillPreviousReadings() {
-                    if (this.form.category === 'electricity') {
-                        const lastElec = this.records.find(r => r.category === 'electricity');
-                        if (lastElec && lastElec.electricity) {
-                            this.form.electricity.t1_old = lastElec.electricity.t1_new || 0;
-                            this.form.electricity.t2_old = lastElec.electricity.t2_new || 0;
-                            this.form.electricity.t3_old = lastElec.electricity.t3_new || 0;
-                            this.form.electricity.t1_new = this.form.electricity.t1_old;
-                            this.form.electricity.t2_new = this.form.electricity.t2_old;
-                            this.form.electricity.t3_new = this.form.electricity.t3_old;
-                        }
-                    } else if (this.form.category === 'water') {
-                        const lastWater = this.records.find(r => r.category === 'water');
-                        if (lastWater && lastWater.water) {
-                            this.form.water.old_reading = lastWater.water.new_reading || 0;
-                            this.form.water.new_reading = this.form.water.old_reading;
-                        }
-                    }
-                },
-
-                calculateElectricitySum() {
-                    if (this.form.category !== 'electricity') return;
-
-                    const e = this.form.electricity;
-                    const u1 = this.getUsage(e.t1_old, e.t1_new);
-                    const u2 = this.getUsage(e.t2_old, e.t2_new);
-                    const u3 = this.getUsage(e.t3_old, e.t3_new);
-
-                    e.t1_sum = Number((u1 * (e.t1_rate || 0)).toFixed(4));
-                    e.t2_sum = Number((u2 * (e.t2_rate || 0)).toFixed(4));
-                    e.t3_sum = Number((u3 * (e.t3_rate || 0)).toFixed(4));
-
-                    const totalWithoutVat = (e.t1_sum || 0) + (e.t2_sum || 0) + (e.t3_sum || 0);
-                    this.form.totalWithoutVat = Number(totalWithoutVat.toFixed(4));
-                    this.onWithoutVatInput();
-                },
-
-                onManualTariffSumChange() {
-                    const e = this.form.electricity;
-                    const totalWithoutVat = (Number(e.t1_sum) || 0) + (Number(e.t2_sum) || 0) + (Number(e.t3_sum) || 0);
-                    this.form.totalWithoutVat = Number(totalWithoutVat.toFixed(4));
-                    this.onWithoutVatInput();
-                },
-
-                calculateWaterSum() {
-                    if (this.form.category !== 'water') return;
-                    const u = this.getUsage(this.form.water.old_reading, this.form.water.new_reading);
-                    const totalWithoutVat = u * (this.form.water.rate || 0);
-                    this.form.totalWithoutVat = Number(totalWithoutVat.toFixed(4));
-                    this.onWithoutVatInput();
-                },
-
-                onWithoutVatInput() {
-                    const vat = (this.form.vatRate || 0) / 100;
-                    this.form.totalWithVat = Number((this.form.totalWithoutVat * (1 + vat)).toFixed(2));
-                },
-
-                onWithVatInput() {
-                    const vat = (this.form.vatRate || 0) / 100;
-                    this.form.totalWithoutVat = Number((this.form.totalWithVat / (1 + vat)).toFixed(4));
-                },
-
-                recalculateVAT() {
-                    this.onWithoutVatInput();
-                },
-
-                openModal(mode, record = null) {
-                    this.modalMode = mode;
-                    if (mode === 'edit' && record) {
-                        this.form = JSON.parse(JSON.stringify(record));
-                    } else {
-                        this.resetForm();
-                        this.applyDefaultTariffs();
-                        this.autoFillPreviousReadings();
-                    }
-                    this.isModalOpen = true;
-                },
-
-                closeModal() {
-                    this.isModalOpen = false;
-                },
-
-                resetForm() {
-                    this.form = {
-                        id: null,
-                        category: 'electricity',
-                        date: new Date().toISOString().substring(0, 10),
-                        periodStart: '',
-                        periodEnd: '',
-                        invoiceDate: '',
-                        paymentDate: '',
-                        paymentCard: '',
-                        vatRate: 20,
-                        totalWithoutVat: 0,
-                        totalWithVat: 0,
-                        notes: '',
-                        photo: null,
-                        electricity: {
-                            t1_old: 0, t1_new: 0, t1_rate: 0.15, t1_sum: 0,
-                            t2_old: 0, t2_new: 0, t2_rate: 0.12, t2_sum: 0,
-                            t3_old: 0, t3_new: 0, t3_rate: 0.08, t3_sum: 0
-                        },
-                        water: { old_reading: 0, new_reading: 0, rate: 1.50 },
-                        taxPeriod: ''
-                    };
-                },
-
-                saveRecord() {
-                    if (this.modalMode === 'add') {
-                        const newRecord = {
-                            ...JSON.parse(JSON.stringify(this.form)),
-                            id: Date.now().toString()
-                        };
-                        this.records.unshift(newRecord);
-                    } else {
-                        const idx = this.records.findIndex(r => r.id === this.form.id);
-                        if (idx !== -1) {
-                            this.records[idx] = JSON.parse(JSON.stringify(this.form));
-                        }
-                    }
-                    this.saveToLocalStorage();
-                    this.closeModal();
-                },
-
-                editRecord(record) {
-                    this.openModal('edit', record);
-                },
-
-                deleteRecord(id) {
-                    if (confirm('Удалить эту запись?')) {
-                        this.records = this.records.filter(r => r.id !== id);
-                        this.saveToLocalStorage();
-                    }
-                },
-
-                handleFileUpload(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        if (file.size > 5 * 1024 * 1024) {
-                            alert('Размер файла превышает 5 МБ. Выберите файл меньшего размера.');
-                            return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.form.photo = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                },
-
-                viewImage(photoBase64) {
-                    this.activeImage = photoBase64;
-                },
-
-                resetFilters() {
-                    this.filters = { category: 'all', month: '', search: '' };
-                },
-
-                getCategoryTitle(cat) {
-                    const map = {
-                        electricity: 'Электроэнергия',
-                        water: 'Водоснабжение',
-                        property_tax: 'Налог на недвижимость',
-                        garbage_tax: 'Налог на мусор (Такса смет)'
-                    };
-                    return map[cat] || cat;
-                },
-
-                getCategoryIcon(cat) {
-                    const map = {
-                        electricity: 'fa-solid fa-bolt',
-                        water: 'fa-solid fa-droplet',
-                        property_tax: 'fa-solid fa-building',
-                        garbage_tax: 'fa-solid fa-trash-can'
-                    };
-                    return map[cat] || 'fa-solid fa-receipt';
-                },
-
-                getCategoryBadgeClass(cat) {
-                    const map = {
-                        electricity: 'bg-amber-100 text-amber-600',
-                        water: 'bg-sky-100 text-sky-600',
-                        property_tax: 'bg-emerald-100 text-emerald-600',
-                        garbage_tax: 'bg-teal-100 text-teal-600'
-                    };
-                    return map[cat] || 'bg-slate-100 text-slate-600';
-                },
-
-                formatDate(dateStr) {
-                    if (!dateStr) return '';
-                    const d = new Date(dateStr);
-                    return d.toLocaleDateString('ru-RU', { year: 'numeric', month: 'short', day: 'numeric' });
-                },
-
-                exportJSON() {
-                    try {
-                        const dataObj = {
-                            records: this.records,
-                            tariffRules: this.tariffRules
-                        };
-                        const jsonStr = JSON.stringify(dataObj, null, 2);
-                        const blob = new Blob([jsonStr], { type: 'application/json' });
-                        const blobUrl = URL.createObjectURL(blob);
-                        
-                        const downloadAnchor = document.createElement('a');
-                        downloadAnchor.href = blobUrl;
-                        downloadAnchor.download = `utility_bills_backup_${new Date().toISOString().substring(0, 10)}.json`;
-                        document.body.appendChild(downloadAnchor);
-                        downloadAnchor.click();
-                        
-                        setTimeout(() => {
-                            document.body.removeChild(downloadAnchor);
-                            URL.revokeObjectURL(blobUrl);
-                        }, 100);
-                    } catch (err) {
-                        alert('Ошибка при выгрузке файла: ' + err.message);
-                    }
-                },
-
-                importJSON(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            try {
-                                const parsed = JSON.parse(e.target.result);
-                                if (Array.isArray(parsed)) {
-                                    this.records = parsed;
-                                } else if (parsed && parsed.records) {
-                                    this.records = parsed.records || [];
-                                    if (parsed.tariffRules) this.tariffRules = parsed.tariffRules;
-                                } else {
-                                    alert('Неверный формат JSON файла.');
-                                    return;
-                                }
-                                this.saveToLocalStorage();
-                                this.saveSettings();
-                                alert('Данные успешно импортированы!');
-                            } catch(err) {
-                                alert('Ошибка чтения файла: ' + err.message);
-                            }
-                        };
-                        reader.readAsText(file);
-                    }
-                },
-
-                confirmClear() {
-                    if (confirm('Вы действительно хотите полностью очистить сохраненные данные?')) {
-                        this.records = [];
-                        this.saveToLocalStorage();
-                    }
-                },
-
-                initCharts() {
-                    const ctxLine = document.getElementById('expensesChart').getContext('2d');
-                    const ctxPie = document.getElementById('pieChart').getContext('2d');
-
-                    this.lineChart = markRaw(new Chart(ctxLine, {
-                        type: 'bar',
-                        data: { labels: [], datasets: [] },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { position: 'bottom' } },
-                            scales: { y: { beginAtZero: true } }
-                        }
-                    }));
-
-                    this.pieChart = markRaw(new Chart(ctxPie, {
-                        type: 'doughnut',
-                        data: { labels: [], datasets: [] },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { position: 'bottom' } }
-                        }
-                    }));
-
-                    this.updateCharts();
-                },
-
-                updateCharts() {
-                    if (!this.lineChart || !this.pieChart) return;
-
-                    const catTotals = { electricity: 0, water: 0, property_tax: 0, garbage_tax: 0 };
-                    this.records.forEach(r => {
-                        if (catTotals[r.category] !== undefined) {
-                            catTotals[r.category] += Number(r.totalWithVat) || 0;
-                        }
-                    });
-
-                    this.pieChart.data.labels = ['Электричество', 'Вода', 'Налог на недвиж.', 'Такса смет'];
-                    this.pieChart.data.datasets = [{
-                        data: [
-                            catTotals.electricity.toFixed(2),
-                            catTotals.water.toFixed(2),
-                            catTotals.property_tax.toFixed(2),
-                            catTotals.garbage_tax.toFixed(2)
-                        ],
-                        backgroundColor: ['#f59e0b', '#0284c7', '#10b981', '#14b8a6']
-                    }];
-                    this.pieChart.update();
-
-                    const monthsMap = {};
-                    this.records.forEach(r => {
-                        const m = r.date.substring(0, 7);
-                        if (!monthsMap[m]) monthsMap[m] = 0;
-                        monthsMap[m] += Number(r.totalWithVat) || 0;
-                    });
-
-                    const sortedMonths = Object.keys(monthsMap).sort().slice(-6);
-                    const monthValues = sortedMonths.map(m => monthsMap[m].toFixed(2));
-
-                    this.lineChart.data.labels = sortedMonths;
-                    this.lineChart.data.datasets = [{
-                        label: 'Расходы (€)',
-                        data: monthValues,
-                        backgroundColor: '#6366f1',
-                        borderRadius: 6
-                    }];
-                    this.lineChart.update();
-                }
-            }
-        }).mount('#app');
-    </script>
+<body>
+<div id="root"></div>
+<nav class="tabs" id="tabs"><div class="in2">
+ <button data-a="tab" data-t="home"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h5v-6h4v6h5V9.5"/></svg>Главная</button>
+ <button data-a="tab" data-t="hist"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>История</button>
+ <button class="fab" data-a="add" aria-label="Новая запись">+</button>
+ <button data-a="tab" data-t="stat"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Аналитика</button>
+ <button data-a="tab" data-t="set"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ещё</button>
+</div></nav>
+<div id="sheet"></div>
+<div id="toast"></div>
+<input type="file" id="fileImport" accept=".json,application/json,text/plain" class="hide">
+
+<script>
+window.PRO_CFG={product:6,prefix:'KU1-',ns:'ku',trialDays:7,title:'Коммуналка PRO',shop:'https://elenakirsanova.com/kommunal/',
+ buyText:'Купить доступ навсегда',
+ feats:['Аналитика: графики расходов и потребления, сравнение с прошлым годом','Тарифы с датой начала — суммы считаются сами','Несколько объектов: квартира, дача, жильё в другой стране — каждый в своей валюте','Фото и сканы квитанций','Напоминания: когда передать показания и оплатить','Выгрузка в Excel'],
+ freeText:'Без ключа показания, платежи, история и резервная копия остаются бесплатными навсегда. Все ваши записи сохраняются в любом режиме.',
+ toast:m=>{try{toast(m)}catch(e){alert(m)}},onChange:()=>{try{render()}catch(e){}}};
+</script>
+<script>
+/* ---------- Доступ PRO: пробный период и ключи доступа с сайта автора ----------
+   © 2026 Елена Кирсанова. Все права защищены. */
+const PRO=(()=>{
+const C=window.PRO_CFG;
+const REVOKE_URL='https://elenakirsanova.com/api/shop/revoked';
+const PUB={kty:'EC',crv:'P-256',x:'jGeBv24S22_FzA2sIa-WBl9UPwesIWjwCeFtDM-utsQ',y:'wNknNB1e3qplIr1JdIrqc-FST1iXdNQjJbgg60fGlzk'};
+const ls={get(k){try{return localStorage.getItem(C.ns+'.'+k)}catch(e){return null}},set(k,v){try{localStorage.setItem(C.ns+'.'+k,v)}catch(e){}},del(k){try{localStorage.removeItem(C.ns+'.'+k)}catch(e){}}};
+const L={key:'',info:null,revoked:false,trialEnd:0};
+const day=()=>{const d=new Date();return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(2026,0,1))/864e5)};
+const dstr=d=>new Date(Date.UTC(2026,0,1)+d*864e5).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+const plur=(n,a,b,c)=>{n=Math.abs(n)%100;const k=n%10;return n>10&&n<20?c:k>1&&k<5?b:k===1?a:c};
+const dd=n=>n+' '+plur(n,'день','дня','дней');
+const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LicJS=(()=>{
+ const P=0xffffffff00000001000000000000000000000000ffffffffffffffffffffffffn,N=0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551n;
+ const G=[0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296n,0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5n];
+ const mod=(a,m)=>{const r=a%m;return r>=0n?r:r+m};
+ const inv=(a,m)=>{let[o,r]=[mod(a,m),m],[x0,x1]=[1n,0n];while(r){const q=o/r;[o,r]=[r,o-q*r];[x0,x1]=[x1,x0-q*x1]}return mod(x0,m)};
+ const add=(A,B)=>{if(!A)return B;if(!B)return A;
+  if(A[0]===B[0]){if(mod(A[1]+B[1],P)===0n)return null;const l=mod(3n*A[0]*A[0]-3n,P)*inv(2n*A[1],P)%P;const x=mod(l*l-2n*A[0],P);return[x,mod(l*(A[0]-x)-A[1],P)]}
+  const l=mod(B[1]-A[1],P)*inv(mod(B[0]-A[0],P),P)%P;const x=mod(l*l-A[0]-B[0],P);return[x,mod(l*(A[0]-x)-A[1],P)]};
+ const mul=(k,Pt)=>{let R=null,Q=Pt;while(k>0n){if(k&1n)R=add(R,Q);Q=add(Q,Q);k>>=1n}return R};
+ const big=b=>b.reduce((a,x)=>(a<<8n)|BigInt(x),0n);
+ const sha256=msg=>{const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const l=msg.length,nb=Math.ceil((l+9)/64)*64,m=new Uint8Array(nb);m.set(msg);m[l]=0x80;
+  const dv=new DataView(m.buffer);dv.setUint32(nb-4,l*8);dv.setUint32(nb-8,Math.floor(l/0x20000000));
+  const W=new Uint32Array(64),ro=(x,n)=>(x>>>n)|(x<<(32-n));
+  for(let o=0;o<nb;o+=64){for(let i=0;i<16;i++)W[i]=dv.getUint32(o+i*4);
+   for(let i=16;i<64;i++)W[i]=(W[i-16]+(ro(W[i-15],7)^ro(W[i-15],18)^(W[i-15]>>>3))+W[i-7]+(ro(W[i-2],17)^ro(W[i-2],19)^(W[i-2]>>>10)))>>>0;
+   let[a,b,c,d,e,f,g,h]=H;
+   for(let i=0;i<64;i++){const t1=(h+(ro(e,6)^ro(e,11)^ro(e,25))+((e&f)^(~e&g))+K[i]+W[i])>>>0,t2=((ro(a,2)^ro(a,13)^ro(a,22))+((a&b)^(a&c)^(b&c)))>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0}
+   H=H.map((v,i)=>(v+[a,b,c,d,e,f,g,h][i])>>>0)}
+  const out=new Uint8Array(32);H.forEach((v,i)=>new DataView(out.buffer).setUint32(i*4,v));return out};
+ const unb=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4)),c=>c.charCodeAt(0));
+ return{verify(body,sig,jwk){const r=big(sig.slice(0,32)),s=big(sig.slice(32,64));if(r<=0n||r>=N||s<=0n||s>=N)return false;
+  const e=big(sha256(body)),w=inv(s,N),Q=[big(unb(jwk.x)),big(unb(jwk.y))];const X=add(mul(mod(e*w,N),G),mul(mod(r*w,N),Q));return!!X&&mod(X[0],N)===r},unb}})();
+async function verify(raw){const str=String(raw||'').replace(/\s+/g,'').replace(/^[A-Z]{2}\d-?/i,'');if(str.length<90)return null;
+ let all;try{all=LicJS.unb(str)}catch(x){return null}
+ if(all.length<76||all[0]!==1||all[1]!==C.product)return null;const ll=all[11];if(all.length!==12+ll+64)return null;
+ const body=all.slice(0,12+ll),sig=all.slice(12+ll);let ok=false;
+ try{if(window.crypto&&crypto.subtle){const k=await crypto.subtle.importKey('jwk',PUB,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);ok=await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},k,sig,body)}else ok=LicJS.verify(body,sig,PUB)}
+ catch(x){try{ok=LicJS.verify(body,sig,PUB)}catch(y){ok=false}}
+ if(!ok)return null;const dv=new DataView(body.buffer,body.byteOffset);
+ return{expires:dv.getUint16(4),serial:dv.getUint32(6),lifetime:!!(all[10]&2),label:new TextDecoder().decode(body.slice(12))}}
+const licOk=()=>!!L.info&&!L.revoked&&day()<=L.info.expires;
+const trialOn=()=>Date.now()<L.trialEnd;
+const left=()=>Math.max(0,Math.ceil((L.trialEnd-Date.now())/864e5));
+const isPro=()=>licOk()||trialOn();
+function tier(){document.documentElement.dataset.tier=isPro()?'pro':'free'}
+function status(){return licOk()?(L.info.lifetime?'PRO навсегда':'PRO до '+dstr(L.info.expires))+(L.info.label?' · '+L.info.label:'')
+ :L.revoked?'Ключ отключён — напишите автору':L.info?'Срок ключа закончился '+dstr(L.info.expires)
+ :trialOn()?'Пробный период: осталось '+dd(left())+', всё открыто':'Бесплатная версия'}
+async function checkRevoked(){if(!L.info)return;let rv=null;try{rv=JSON.parse(ls.get('rev')||'null')}catch(x){}
+ if(rv&&(rv.list||[]).includes(L.info.serial))L.revoked=true;
+ if(navigator.onLine&&(!rv||Date.now()-(rv.at||0)>3*864e5))fetch(REVOKE_URL,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(!d||!Array.isArray(d.revoked))return;
+  ls.set('rev',JSON.stringify({list:d.revoked,at:Date.now()}));const was=L.revoked;L.revoked=!!(L.info&&d.revoked.includes(L.info.serial));if(was!==L.revoked){tier();C.onChange&&C.onChange()}}).catch(()=>{})}
+async function init(){mount();let t=+ls.get('trial');if(!t){t=Date.now();ls.set('trial',String(t))}L.trialEnd=t+(C.trialDays||7)*864e5;
+ const k=ls.get('lic');if(k){L.key=k;L.info=await verify(k);await checkRevoked()}tier()}
+async function activate(raw){const info=await verify(raw);
+ if(!info){msg('Ключ не подошёл. Скопируйте его целиком — он начинается с '+C.prefix);return false}
+ if(day()>info.expires){msg('Срок этого ключа закончился '+dstr(info.expires));return false}
+ L.key=String(raw).replace(/\s+/g,'');L.info=info;L.revoked=false;ls.set('lic',L.key);tier();close();checkRevoked();
+ msg(info.lifetime?'PRO включён навсегда ✓':'PRO включён до '+dstr(info.expires)+' ✓');C.onChange&&C.onChange();return true}
+function remove(){if(!confirm('Удалить ключ с этого устройства? Его можно будет вставить снова.'))return;ls.del('lic');L.key='';L.info=null;tier();C.onChange&&C.onChange()}
+function msg(t){if(C.toast)C.toast(t);else alert(t)}
+/* оформление окна — своё, не зависит от стилей приложения */
+const css=`#proOv{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center}
+#proOv.on{display:flex}#proBox{background:var(--pro-bg,#fffdf9);color:var(--pro-ink,#222);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));box-sizing:border-box;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+@media (prefers-color-scheme:dark){#proBox{background:var(--pro-bg-d,#24211d);color:var(--pro-ink-d,#eee)}}
+#proBox h2{margin:0 0 6px;font-size:21px;display:flex;justify-content:space-between;align-items:center}#proBox .x{border:0;background:none;font-size:26px;color:inherit;cursor:pointer;line-height:1}
+.pro-l{list-style:none;padding:0;margin:10px 0 14px}.pro-l li{padding:3px 0 3px 24px;position:relative;font-size:15px}.pro-l li:before{content:'✓';position:absolute;left:3px;color:var(--pro-acc,#2f7d5b);font-weight:700}
+.pro-b{display:block;width:100%;box-sizing:border-box;text-align:center;border:0;border-radius:12px;padding:14px;font-family:inherit;font-weight:600;font-size:16px;line-height:1.2;background:var(--pro-acc,#2f6f57);color:#fff;text-decoration:none;cursor:pointer;margin-top:8px}
+.pro-b.sec{background:rgba(127,127,127,.15);color:inherit}
+.pro-t{width:100%;box-sizing:border-box;min-height:74px;border-radius:12px;border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;padding:10px;font:14px/1.4 ui-monospace,Menlo,monospace;margin-top:14px}
+.pro-n{font-size:13.5px;opacity:.75;margin-top:12px}.pro-s{font-weight:650}
+.pro-card{border:1px solid rgba(127,127,127,.25);border-radius:16px;padding:14px;margin:0 0 14px}`;
+let ov;
+function mount(){if(ov)return;const st=document.createElement('style');st.textContent=css;document.head.insertBefore(st,document.head.firstChild);
+ ov=document.createElement('div');ov.id='proOv';ov.innerHTML='<div id="proBox"></div>';document.body.appendChild(ov);
+ ov.addEventListener('click',x=>{if(x.target===ov)close()});
+ document.addEventListener('click',x=>{const b=x.target.closest('[data-pro]');if(!b)return;const a=b.dataset.pro;
+  if(a==='close')close();if(a==='open'){x.preventDefault();open()}if(a==='del')remove();
+  if(a==='act'){const t=document.getElementById(b.dataset.src);activate(t?t.value:'')}})}
+const feats=()=>'<ul class="pro-l">'+C.feats.map(f=>'<li>'+e(f)+'</li>').join('')+'</ul>';
+const keyBox=id=>`<textarea class="pro-t" id="${id}" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="${C.prefix}…"></textarea><button class="pro-b" data-pro="act" data-src="${id}">Активировать ключ</button>`;
+function open(){mount();document.getElementById('proBox').innerHTML=`<h2>${e(C.title)}<button class="x" data-pro="close" aria-label="Закрыть">×</button></h2>
+ <div>${trialOn()?'Пробный период: осталось '+dd(left())+'.':'Это входит в PRO. Пробный период закончился — чтобы открыть всё, активируйте ключ доступа.'}</div>${feats()}
+ <a class="pro-b" href="${C.shop}" target="_blank" rel="noopener">${e(C.buyText||'Купить доступ')}</a>${keyBox('proKeyO')}
+ <div class="pro-n">${e(C.freeText)}</div>`;ov.classList.add('on')}
+function close(){if(ov)ov.classList.remove('on')}
+function cardHTML(){return`<div class="pro-card"><div class="pro-s">⭐ ${e(status())}</div>
+ ${licOk()?`<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="pro-b sec" style="flex:1" href="${C.shop}" target="_blank" rel="noopener">Сайт автора</a><button class="pro-b sec" style="flex:1" data-pro="del">Удалить ключ</button></div>`
+ :`<div class="pro-n" style="margin-top:6px">После оплаты на сайте вы сразу получите ключ (он начинается с ${C.prefix}). Вставьте его сюда — интернет для проверки не нужен.</div><a class="pro-b" href="${C.shop}" target="_blank" rel="noopener">${e(C.buyText||'Купить доступ')}</a>${keyBox('proKeyC')}`}</div>`}
+return{init,isPro,open,close,cardHTML,status,mount,trialOn,left,licOk}})();
+</script>
+<script>
+/* ================= Коммуналка — учёт коммунальных платежей и показаний =================
+   © 2026 Елена Кирсанова. Все права защищены.
+   Данные хранятся только на устройстве пользователя.
+   ВАЖНО: записи и тарифы лежат под прежними ключами utility_records_data и utility_tariff_rules
+   в прежнем формате — данные из первой версии приложения открываются без переноса и без изменений. */
+'use strict';
+const VERSION='2.0';
+const NEWURL='https://kommunal.elenakirsanova.com/';
+const OLDHOST=/\.github\.io$/i.test(location.hostname);
+let newLive=false;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const K_REC='utility_records_data',K_TAR='utility_tariff_rules',K_SET='ku.settings';
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){localStorage.setItem(k,v)},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const J=v=>JSON.parse(JSON.stringify(v));
+const r2=n=>Number((+n||0).toFixed(2)),r4=n=>Number((+n||0).toFixed(4));
+const num=v=>{if(typeof v==='number')return isFinite(v)?v:0;const n=parseFloat(String(v??'').replace(/\s/g,'').replace(',','.'));return isFinite(n)?n:0};
+const pad=n=>String(n).padStart(2,'0');
+const isoOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const todayISO=()=>isoOf(new Date());
+const mkey=d=>d.getFullYear()+'-'+pad(d.getMonth()+1);
+const MON=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const MONG=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MOND=['январю','февралю','марту','апрелю','маю','июню','июлю','августу','сентябрю','октябрю','ноябрю','декабрю'];
+const MONS=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const mTitle=m=>{const[y,mm]=String(m).split('-');return (MON[+mm-1]||'')+' '+y};
+const mShort=m=>MONS[+String(m).split('-')[1]-1]||'';
+const mAdd=(m,k)=>{const[y,mm]=String(m).split('-').map(Number);return mkey(new Date(y,mm-1+k,1))};
+const pdate=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?new Date(+m[1],+m[2]-1,+m[3]):null};
+const fdate=s=>{const d=pdate(s);return d?d.getDate()+' '+MONG[d.getMonth()].slice(0,3)+' '+d.getFullYear():''};
+const plural=(n,a,b,c)=>{const x=Math.abs(n)%100,k=x%10;return n+' '+(x>10&&x<20?c:k>1&&k<5?b:k===1?a:c)};
+const usage=(o,n)=>{const d=num(n)-num(o);return d>0?Number(d.toFixed(2)):0};
+const fnum=(n,d=2)=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:d}).format(+n||0);
+
+/* ---------- категории ---------- */
+const CATS={
+ electricity:{title:'Электроэнергия',emoji:'⚡',type:'elec',unit:'кВт·ч',g:['#fbbf24','#f97316']},
+ water:{title:'Холодная вода',emoji:'💧',type:'meter',unit:'м³',g:['#38bdf8','#2563eb']},
+ hot_water:{title:'Горячая вода',emoji:'♨️',type:'meter',unit:'м³',g:['#fb7185','#e11d48']},
+ gas:{title:'Газ',emoji:'🔥',type:'meter',unit:'м³',g:['#a78bfa','#6d28d9']},
+ heating:{title:'Отопление',emoji:'🌡️',type:'fixed',unit:'',g:['#fb923c','#dc2626']},
+ sewage:{title:'Водоотведение',emoji:'🚰',type:'fixed',unit:'',g:['#5eead4','#0d9488']},
+ maintenance:{title:'Содержание жилья',emoji:'🏢',type:'fixed',unit:'',g:['#818cf8','#4338ca']},
+ capital_repair:{title:'Капремонт',emoji:'🧱',type:'fixed',unit:'',g:['#f0a868','#b45309']},
+ garbage_tax:{title:'Вывоз мусора',emoji:'🗑️',type:'fixed',unit:'',g:['#4ade80','#15803d']},
+ property_tax:{title:'Налог на имущество',emoji:'🏛️',type:'fixed',unit:'',g:['#34d399','#047857']},
+ internet:{title:'Интернет и ТВ',emoji:'📶',type:'fixed',unit:'',g:['#f0abfc','#c026d3']},
+ security:{title:'Домофон и охрана',emoji:'🔐',type:'fixed',unit:'',g:['#94a3b8','#475569']},
+ insurance:{title:'Страховка',emoji:'🛡️',type:'fixed',unit:'',g:['#67e8f9','#0891b2']},
+ other:{title:'Другое',emoji:'🧾',type:'fixed',unit:'',g:['#cbd5e1','#64748b']}
+};
+const PALETTE=[['#f472b6','#be185d'],['#60a5fa','#1d4ed8'],['#facc15','#ca8a04'],['#4ade80','#16a34a'],['#c084fc','#7e22ce'],['#fb923c','#c2410c'],['#2dd4bf','#0f766e'],['#f87171','#b91c1c']];
+const PRESETS={
+ ru:{label:'🇷🇺 Россия',currency:'RUB',vat:{on:false,rate:20},elec:1,cats:['electricity','water','hot_water','sewage','heating','maintenance','capital_repair','garbage_tax','internet'],names:{}},
+ bg:{label:'🇧🇬 Болгария',currency:'EUR',vat:{on:true,rate:20},elec:2,cats:['electricity','water','maintenance','property_tax','garbage_tax','internet'],names:{water:'Вода',maintenance:'Такса поддръжка (вход)',garbage_tax:'Такса смет',property_tax:'Данък сгради'}},
+ other:{label:'🌍 Другая страна',currency:'EUR',vat:{on:false,rate:20},elec:1,cats:['electricity','water','gas','heating','maintenance','garbage_tax','internet'],names:{water:'Вода'}}
+};
+const CURRENCIES=[['RUB','₽ — рубль'],['EUR','€ — евро'],['USD','$ — доллар'],['BGN','лв — болгарский лев'],['KZT','₸ — тенге'],['BYN','Br — белорусский рубль'],['UAH','₴ — гривна'],['GEL','₾ — лари'],['AMD','֏ — драм'],['TRY','₺ — турецкая лира'],['RSD','дин. — сербский динар'],['CZK','Kč — чешская крона'],['PLN','zł — злотый'],['ILS','₪ — шекель'],['AED','AED — дирхам'],['THB','฿ — бат'],['GBP','£ — фунт']];
+const EMOJIS=['🏠','🏡','🏢','🏘️','🌳','🏖️','⛰️','🏰','🛖','🏬'];
+const TNAMES={1:['Однотарифный'],2:['Т1 · День','Т2 · Ночь'],3:['Т1 · Пик (день 1)','Т2 · Полупик (день 2)','Т3 · Ночь']};
+
+/* ---------- состояние ---------- */
+let records=[],rules=[],S=null,locked=false,lockMsg='',rulesVirtual=false,firstRun=false;
+let tab='home',curMonth=mkey(new Date());
+const H={cat:'all',month:'',status:'all',q:''};
+const A={range:'12m',cons:null};
+
+/* ---------- IndexedDB: фото квитанций и автокопии ---------- */
+const DB=(()=>{let p=null;
+ function open(){return p||(p=new Promise((ok,no)=>{let r;try{r=indexedDB.open('kommunal_db',1)}catch(e){no(e);return}
+  r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('photos'))d.createObjectStore('photos');if(!d.objectStoreNames.contains('snaps'))d.createObjectStore('snaps')};
+  r.onsuccess=()=>ok(r.result);r.onerror=()=>{p=null;no(r.error)}}))}
+ function tx(store,mode,fn){return open().then(d=>new Promise((ok,no)=>{const t=d.transaction(store,mode),q=fn(t.objectStore(store));let res;if(q)q.onsuccess=()=>{res=q.result};t.oncomplete=()=>ok(res);t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)}))}
+ return{get:(s,k)=>tx(s,'readonly',st=>st.get(k)),put:(s,k,v)=>tx(s,'readwrite',st=>st.put(v,k)),del:(s,k)=>tx(s,'readwrite',st=>st.delete(k)),keys:s=>tx(s,'readonly',st=>st.getAllKeys())}})();
+async function snapshot(name){try{await DB.put('snaps',name,{date:new Date().toISOString(),rec:LS.get(K_REC),tar:LS.get(K_TAR),set:LS.get(K_SET)})}catch(e){}}
+
+/* ---------- загрузка: прежние данные читаются как есть, ничего не перезаписывается ---------- */
+const LEGACY_RULE={effectiveMonth:'2025-01',electricity:{t1_rate:0.145829,t2_rate:0.112450,t3_rate:0.078912},waterRate:1.50};
+function load(){
+ const rr=LS.get(K_REC),rt=LS.get(K_TAR),rs=LS.get(K_SET);
+ if(rr!=null){try{const v=JSON.parse(rr);if(v===null)records=[];else if(Array.isArray(v))records=v;else throw new Error('неожиданный формат')}
+  catch(e){locked=true;lockMsg='Не удалось прочитать сохранённые записи ('+e.message+'). Приложение ничего не изменило и ничего не будет записывать, пока это не исправлено.'}}
+ if(rt!=null){try{const v=JSON.parse(rt);if(Array.isArray(v))rules=v;else if(v!==null)throw new Error('неожиданный формат')}
+  catch(e){locked=true;lockMsg='Не удалось прочитать тарифы ('+e.message+'). Приложение ничего не изменило и ничего не будет записывать, пока это не исправлено.'}}
+ const hadLegacy=rr!=null||rt!=null;
+ if(rt==null&&records.length){rules=[J(LEGACY_RULE)];rulesVirtual=true} // как в первой версии: тариф по умолчанию, пока не сохранён свой
+ if(rs){try{S=JSON.parse(rs)}catch(e){S=null}}
+ if(!S||!Array.isArray(S.objects)||!S.objects.length){
+  if(hadLegacy){S=legacySettings();saveSettings()}
+  else{S=defaultSettings('ru');firstRun=true}
+ }
+ fixSettings();
+ if(hadLegacy&&!LS.get('ku.snap1')&&!locked){snapshot('Перед обновлением до версии 2').then(()=>{try{LS.set('ku.snap1','1')}catch(e){}})}
+ if(locked)snapshot('Нечитаемые данные '+todayISO());
+}
+function legacySettings(){return{v:1,theme:'auto',active:'main',customCats:[],objects:[{id:'main',name:'Мой дом',emoji:'🏠',currency:'EUR',vat:{on:true,rate:20},elec:3,
+ cats:['electricity','water','property_tax','garbage_tax'],names:{water:'Водоснабжение',property_tax:'Налог на недвижимость',garbage_tax:'Такса смет'},remind:{}}]}}
+function defaultSettings(p,name,cur){const P=PRESETS[p]||PRESETS.ru;return{v:1,theme:'auto',active:'o1',customCats:[],objects:[{id:'o1',name:name||'Моя квартира',emoji:'🏠',currency:cur||P.currency,vat:J(P.vat),elec:P.elec,cats:P.cats.slice(),names:J(P.names),remind:{}}]}}
+function fixSettings(){
+ S.customCats=Array.isArray(S.customCats)?S.customCats:[];S.theme=S.theme||'auto';
+ S.objects.forEach(o=>{o.id=o.id||('o'+Date.now());o.name=o.name||'Мой дом';o.emoji=o.emoji||'🏠';o.cats=Array.isArray(o.cats)?o.cats:[];o.names=o.names||{};
+  o.vat=o.vat||{on:false,rate:20};o.elec=[1,2,3].includes(+o.elec)?+o.elec:1;o.remind=o.remind||{};o.currency=o.currency||'EUR'});
+ if(!S.objects.some(o=>o.id===S.active))S.active=S.objects[0].id;
+ records.forEach(r=>{if(!r||typeof r!=='object'||!r.category)return;const o=S.objects.find(x=>x.id===objId(r));if(o&&!o.cats.includes(r.category))o.cats.push(r.category)});
+}
+function persist(){
+ if(locked){toast('Запись отключена: сохранённые данные не прочитаны');return false}
+ try{LS.set(K_REC,JSON.stringify(records));return true}
+ catch(e){try{records=JSON.parse(LS.get(K_REC)||'[]')||[]}catch(x){}
+  alert('Не удалось сохранить: память браузера для этого приложения заполнена. Сделайте резервную копию и удалите старые фото квитанций.');return false}}
+function saveRules(){if(locked)return false;try{LS.set(K_TAR,JSON.stringify(rules));rulesVirtual=false;return true}catch(e){alert('Не удалось сохранить тарифы: '+e.message);return false}}
+function saveSettings(){if(locked)return false;try{LS.set(K_SET,JSON.stringify(S));return true}catch(e){return false}}
+
+/* ---------- помощники ---------- */
+const firstObj=()=>S.objects[0];
+const objId=r=>{const id=r&&r.objectId;return id&&S.objects.some(o=>o.id===id)?id:firstObj().id};
+const OBJ=()=>S.objects.find(o=>o.id===S.active)||firstObj();
+const valid=r=>r&&typeof r==='object'&&r.category;
+const recsOf=oid=>records.filter(r=>valid(r)&&objId(r)===oid);
+const recs=()=>recsOf(OBJ().id);
+const byDate=(a,b)=>String(b.date||'').localeCompare(String(a.date||''))||(Number(b.id)||0)-(Number(a.id)||0);
+const amt=r=>num(r.totalWithVat);
+const sum=a=>a.reduce((s,r)=>s+amt(r),0);
+function cat(id,o){o=o||OBJ();const c=CATS[id]||S.customCats.find(x=>x.id===id);const b=c||{title:id,emoji:'🧾',type:'fixed',unit:'',g:['#cbd5e1','#64748b']};
+ return Object.assign({},b,{id,title:(o.names&&o.names[id])||b.title})}
+const cv=c=>`--c1:${c.g[0]};--c2:${c.g[1]}`;
+const mtr=r=>r.category==='water'?(r.water||r.meter):(r.meter||r.water);
+function usageOf(r){const t=cat(r.category,S.objects.find(o=>o.id===objId(r))).type;
+ if(t==='elec'&&r.electricity){const e=r.electricity;return usage(e.t1_old,e.t1_new)+usage(e.t2_old,e.t2_new)+usage(e.t3_old,e.t3_new)}
+ if(t==='meter'){const m=mtr(r);return m?usage(m.old_reading,m.new_reading):0}return null}
+function fmt(n,cur){cur=cur||OBJ().currency;n=+n||0;try{return new Intl.NumberFormat('ru-RU',{style:'currency',currency:cur,minimumFractionDigits:Math.abs(n%1)>0.0001?2:0,maximumFractionDigits:2}).format(n)}catch(e){return fnum(n)+' '+cur}}
+const fshort=n=>n>=1e6?fnum(n/1e6,1)+' млн':n>=1e4?fnum(n/1e3,0)+' тыс':n>=1e3?fnum(n/1e3,1)+' тыс':fnum(n,0);
+function lastOf(oid,cid,exclude){return records.filter(r=>valid(r)&&r.category===cid&&objId(r)===oid&&r.id!==exclude).sort(byDate)[0]||null}
+function rulesFor(oid){return rules.filter(r=>r&&(r.objectId&&S.objects.some(o=>o.id===r.objectId)?r.objectId:firstObj().id)===oid).sort((a,b)=>String(b.effectiveMonth).localeCompare(String(a.effectiveMonth)))}
+function ruleAt(oid,date){const m=String(date||todayISO()).slice(0,7),rs=rulesFor(oid);return rs.find(r=>r.effectiveMonth<=m)||rs[rs.length-1]||null}
+function rateOf(rule,cid,t){if(!rule)return null;let v;
+ if(cid==='electricity')v=rule.electricity&&rule.electricity['t'+t+'_rate'];
+ else if(cid==='water'&&rule.waterRate!=null)v=rule.waterRate;
+ else v=rule.rates&&rule.rates[cid];
+ return v==null||v===''?null:num(v)}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2600)}
+function needPro(){if(PRO.isPro())return false;PRO.open();return true}
+function applyTheme(){const t=S&&S.theme||'auto';const d=t==='dark'||(t==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
+ document.documentElement.dataset.theme=d?'dark':'light';const m=document.querySelector('meta[name=theme-color]');if(m)m.content=d?'#0e0c1c':'#7c3aed'}
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme)}catch(e){}
+
+/* ---------- шторка ---------- */
+let sheetLock=false;
+function sheet(html,lock){sheetLock=!!lock;const s=$('sheet');s.innerHTML='<div class="sh-bg" data-a="'+(lock?'':'sh-close')+'"></div><div class="sh"><div class="sh-grip"></div>'+html+'</div>';s.classList.add('on');document.body.classList.add('noscroll')}
+function sheetBody(html){const b=$('sheet').querySelector('.sh');if(b){const y=b.scrollTop;b.innerHTML='<div class="sh-grip"></div>'+html;b.scrollTop=y}}
+function closeSheet(){$('sheet').classList.remove('on');$('sheet').innerHTML='';document.body.classList.remove('noscroll');F=null;sheetLock=false}
+const shh=(t,noX)=>`<div class="shh"><h2>${t}</h2>${noX?'':'<button class="x" data-a="sh-close" aria-label="Закрыть">×</button>'}</div>`;
+
+/* ================= ГЛАВНАЯ ================= */
+function proChip(){const s=PRO.licOk()?'⭐ PRO':PRO.trialOn()?'⭐ '+PRO.left()+' дн. PRO':'Бесплатная';return`<button class="hchip" data-a="pro">${s}</button>`}
+function heroTop(){const o=OBJ();return`<div class="hrow"><div class="brand"><span class="lg">🏠</span>Коммуналка</div>${proChip()}</div>
+ <button class="objsw" data-a="objs">${esc(o.emoji)} ${esc(o.name)} <span style="opacity:.8">▾</span></button>`}
+function vHome(){
+ const o=OBJ(),rs=recs(),m=curMonth,now=mkey(new Date());
+ const inM=rs.filter(r=>String(r.date||'').startsWith(m)),tot=sum(inM),prev=sum(rs.filter(r=>String(r.date||'').startsWith(mAdd(m,-1))));
+ const unpaid=inM.filter(r=>!r.paymentDate),us=sum(unpaid);
+ let delta='';if(prev>0&&tot>0){const d=Math.round((tot-prev)/prev*100);delta=`<span>${d>0?'▲ +':d<0?'▼ ':''}${d}% к ${MOND[+mAdd(m,-1).split('-')[1]-1]}</span>`}
+ let h=`<header class="hero"><div class="wrap">${heroTop()}
+  <div class="month"><button data-a="m-prev" aria-label="Предыдущий месяц">‹</button><span>${mTitle(m)}</span><button data-a="m-next" aria-label="Следующий месяц" ${m>=now?'disabled':''}>›</button></div>
+  <div class="total num">${fmt(tot)}</div>
+  <div class="hpills">${inM.length?`<span>${plural(inM.length,'запись','записи','записей')}</span>`:'<span>Пока нет записей за месяц</span>'}${tot-us>0?`<span>✓ оплачено ${fmt(tot-us)}</span>`:''}${us>0?`<span class="w">⏳ к оплате ${fmt(us)}</span>`:''}${delta}</div>
+ </div></header><main class="wrap">`;
+ h+=banners();
+ h+=`<div class="tiles">`+o.cats.map(id=>{const c=cat(id),mr=inM.filter(r=>r.category===id),last=lastOf(o.id,id);
+  let sub='Нажмите, чтобы внести';
+  if(c.type!=='fixed'&&mr.length){const u=mr.reduce((s,r)=>s+(usageOf(r)||0),0);sub=fnum(u)+' '+c.unit+' за месяц'}
+  else if(last){const u=usageOf(last);sub=(c.type!=='fixed'&&last?'показания '+lastReading(last)+' · ':'')+fdate(last.date)}
+  return`<button class="tile" style="${cv(c)}" data-a="add" data-cat="${id}"><span class="ic">${c.emoji}</span><span class="tplus">+</span>
+   <span class="tt">${esc(c.title)}</span><span class="tv num">${mr.length?fmt(sum(mr)):'—'}</span><span class="ts">${esc(sub)}</span></button>`}).join('')+`</div>`;
+ const recent=rs.slice().sort(byDate).slice(0,6);
+ h+=`<div class="card"><h3>Последние записи ${rs.length?'<button class="lnk" data-a="tab" data-t="hist">Вся история →</button>':''}</h3>`+
+  (recent.length?recent.map(recRow).join(''):`<div class="empty"><div class="e">🧾</div>Здесь появятся ваши платежи и показания.<br>Нажмите на категорию выше или на «+» внизу.</div>`)+`</div>`;
+ return h+foot()+`</main>`}
+function lastReading(r){const c=cat(r.category);if(c.type==='elec'&&r.electricity){const e=r.electricity,n=Math.max(OBJ().elec,num(e.t3_new)?3:num(e.t2_new)?2:1);return[1,2,3].slice(0,n).map(i=>fnum(e['t'+i+'_new'])).join(' / ')}
+ const m=mtr(r);return m?fnum(m.new_reading):''}
+function recRow(r){const o=S.objects.find(x=>x.id===objId(r))||OBJ(),c=cat(r.category,o),u=usageOf(r);
+ const bits=[fdate(r.date)];if(u)bits.push(fnum(u)+' '+c.unit);if(c.type==='fixed'&&r.taxPeriod)bits.push(r.taxPeriod);if(r.photo||r.photoId)bits.push('📎');
+ return`<div class="rec" data-a="rec" data-id="${esc(r.id)}"><span class="ic s" style="${cv(c)}">${c.emoji}</span><div class="mid"><b>${esc(c.title)}</b><span>${esc(bits.join(' · '))}</span></div>
+  <div class="amt"><b class="num">${fmt(amt(r),o.currency)}</b><span class="st ${r.paymentDate?'ok':'no'}">${r.paymentDate?'оплачено':'не оплачено'}</span></div></div>`}
+function banners(){let h='';const o=OBJ();
+ if(locked)h+=`<div class="ban bad"><span class="bi">⚠️</span><div><b>Данные не прочитаны</b>${esc(lockMsg)}<div class="acts"><button data-a="raw">Скачать сохранённые данные как есть</button><button data-a="imp">Восстановить из копии</button></div></div></div>`;
+ if(OLDHOST&&newLive&&!LS.get('ku.movedAsk'))h+=`<div class="ban info"><span class="bi">🚚</span><div><b>У приложения новый адрес</b>Перенесите свои записи на ${esc(NEWURL.replace('https://','').replace(/\/$/,''))} — это займёт пару минут, сначала сохранится резервная копия. Здесь всё продолжит работать как прежде.<div class="acts"><button data-a="moveGo">Перенести данные</button><button data-a="moveLater">Позже</button></div></div></div>`;
+ const lb=+LS.get('ku.lastBackup')||0,n=records.length;
+ if(n>=5&&Date.now()-lb>30*864e5)h+=`<div class="ban warn"><span class="bi">💾</span><div><b>${lb?'Давно не было резервной копии':'Сделайте резервную копию'}</b>Данные хранятся только на этом устройстве. Копия раз в месяц защитит их при смене телефона или очистке браузера.<div class="acts"><button data-a="backup">Сохранить копию</button></div></div></div>`;
+ if(PRO.isPro()){const R=o.remind||{},d=new Date().getDate(),m=mkey(new Date());
+  const rf=+R.readFrom,rt=+R.readTo;
+  if(rf&&rt){const inWin=rf<=rt?(d>=rf&&d<=rt):(d>=rf||d<=rt);
+   if(inWin){const miss=o.cats.filter(id=>cat(id).type!=='fixed'&&!recs().some(r=>r.category===id&&String(r.date).startsWith(m)));
+    if(miss.length)h+=`<div class="ban info"><span class="bi">📟</span><div><b>Пора передать показания — до ${rt} числа</b>${miss.map(id=>esc(cat(id).title)).join(', ')}<div class="acts">${miss.map(id=>`<button data-a="add" data-cat="${id}">${cat(id).emoji} Внести</button>`).join('')}</div></div></div>`}}
+  const pd=+R.payDay;if(pd){const un=recs().filter(r=>!r.paymentDate&&String(r.date)>=mAdd(m,-2));
+   if(un.length){const late=d>pd;h+=`<div class="ban ${late?'bad':'warn'}"><span class="bi">💳</span><div><b>${late?'Срок оплаты прошёл':'Оплатить до '+pd+' числа'}</b>Не оплачено: ${plural(un.length,'счёт','счёта','счетов')} на ${fmt(sum(un))}.<div class="acts"><button data-a="unpaid">Показать</button></div></div></div>`}}}
+ return h}
+const foot=()=>`<div class="foot">Коммуналка ${VERSION} · © 2026 Елена Кирсанова. Все права защищены.</div>`;
+
+/* ================= ИСТОРИЯ ================= */
+function vHist(){const o=OBJ();
+ let h=`<header class="hero compact"><div class="wrap">${heroTop()}<div class="htitle">История</div></div></header><main class="wrap flat">`;
+ h+=`<div class="card"><div class="cchips"><button class="cc ${H.cat==='all'?'on':''}" data-a="h-cat" data-cat="all">Все</button>`+o.cats.map(id=>{const c=cat(id);return`<button class="cc ${H.cat===id?'on':''}" style="${cv(c)}" data-a="h-cat" data-cat="${id}">${c.emoji} ${esc(c.title)}</button>`}).join('')+`</div>
+  <div class="frow"><input class="in" type="month" id="hMonth" value="${esc(H.month)}" aria-label="Месяц"><select class="in" id="hStatus"><option value="all">Все платежи</option><option value="no" ${H.status==='no'?'selected':''}>Не оплачено</option><option value="ok" ${H.status==='ok'?'selected':''}>Оплачено</option></select></div>
+  <input class="in" style="margin-top:8px" type="search" id="hQ" placeholder="🔍 Поиск: заметки, способ оплаты, период…" value="${esc(H.q)}"></div><div id="hlist">${histList()}</div>`;
+ return h+foot()+`</main>`}
+function histList(){const q=H.q.trim().toLowerCase();
+ const list=recs().filter(r=>(H.cat==='all'||r.category===H.cat)&&(!H.month||String(r.date).startsWith(H.month))&&(H.status==='all'||(H.status==='ok')===!!r.paymentDate)
+  &&(!q||[r.notes,r.paymentCard,r.taxPeriod,cat(r.category).title].some(s=>s&&String(s).toLowerCase().includes(q)))).sort(byDate);
+ if(!list.length)return`<div class="card empty"><div class="e">🔎</div>Ничего не найдено${H.cat!=='all'||H.month||H.status!=='all'||q?'<br><button class="lnk" data-a="h-reset" style="margin-top:8px">Сбросить фильтры</button>':''}</div>`;
+ const g={};list.forEach(r=>{const m=String(r.date).slice(0,7);(g[m]=g[m]||[]).push(r)});
+ return Object.keys(g).sort().reverse().map(m=>`<div class="mhead">${mTitle(m)}<span>${plural(g[m].length,'запись','записи','записей')} · ${fmt(sum(g[m]))}</span></div><div class="card">${g[m].map(recRow).join('')}</div>`).join('')}
+
+/* ================= ЗАПИСЬ: просмотр ================= */
+const photoCache={};
+async function photoURL(r){if(r._photoUrl)return r._photoUrl;if(r.photoId){if(photoCache[r.photoId])return photoCache[r.photoId];try{const b=await DB.get('photos',r.photoId);if(b){return photoCache[r.photoId]=URL.createObjectURL(b)}}catch(e){}}
+ if(r.photo&&String(r.photo).startsWith('data:'))return r.photo;return null}
+function showRec(id){const r=records.find(x=>x.id===id);if(!r)return;const o=S.objects.find(x=>x.id===objId(r)),c=cat(r.category,o);
+ let d='';const row=(k,v)=>v||v===0?`<dt>${k}</dt><dd>${v}</dd>`:'';
+ if(c.type==='elec'&&r.electricity){const e=r.electricity,n=Math.max(o.elec,num(e.t3_old)||num(e.t3_new)?3:num(e.t2_old)||num(e.t2_new)?2:1),nm=TNAMES[n];
+  for(let i=1;i<=n;i++)d+=row(esc(nm[i-1]),`${fnum(usage(e['t'+i+'_old'],e['t'+i+'_new']))} ${c.unit}<br><span class="mut small">${fnum(e['t'+i+'_old'],4)} → ${fnum(e['t'+i+'_new'],4)} · ${fnum(e['t'+i+'_rate'],6)} × = ${fmt(e['t'+i+'_sum'],o.currency)}</span>`)}
+ if(c.type==='meter'){const m=mtr(r);if(m)d+=row('Расход',`${fnum(usage(m.old_reading,m.new_reading))} ${c.unit}<br><span class="mut small">${fnum(m.old_reading,4)} → ${fnum(m.new_reading,4)} · тариф ${fnum(m.rate,6)}</span>`)}
+ if(r.taxPeriod)d+=row('Период',esc(r.taxPeriod));
+ if(r.periodStart||r.periodEnd)d+=row('Расчётный период',esc(fdate(r.periodStart)+' — '+fdate(r.periodEnd)));
+ if(r.invoiceDate)d+=row('Счёт от',fdate(r.invoiceDate));
+ d+=row('Оплата',r.paymentDate?'<span class="st ok">оплачено '+fdate(r.paymentDate)+'</span>':'<span class="st no">не оплачено</span>');
+ if(r.paymentCard)d+=row('Способ оплаты',esc(r.paymentCard));
+ if(num(r.vatRate))d+=row('Без НДС',fmt(r.totalWithoutVat,o.currency))+row('НДС',num(r.vatRate)+'%');
+ if(r.notes)d+=row('Заметки',esc(r.notes));
+ sheet(shh(`<span class="fcat"><span class="ic s" style="${cv(c)}">${c.emoji}</span>${esc(c.title)}</span>`)+
+  `<div class="total num" style="font-size:34px;margin:4px 0 0;background:linear-gradient(135deg,${c.g[0]},${c.g[1]});-webkit-background-clip:text;background-clip:text;color:transparent">${fmt(amt(r),o.currency)}</div>
+  <div class="mut">${fdate(r.date)}${S.objects.length>1?' · '+esc(o.emoji+' '+o.name):''}</div><dl class="dl">${d}</dl>
+  <div class="photo" id="recPhoto"></div>
+  ${r.paymentDate?'':`<button class="btn" data-a="paid" data-id="${esc(r.id)}">✓ Отметить оплаченным сегодня</button>`}
+  <div class="brow"><button class="btn sec" data-a="edit" data-id="${esc(r.id)}">✏️ Изменить</button><button class="btn sec" data-a="again" data-id="${esc(r.id)}">➕ Следующая</button></div>
+  <button class="btn danger" data-a="del" data-id="${esc(r.id)}">Удалить запись</button>`);
+ photoURL(r).then(u=>{const p=$('recPhoto');if(u&&p)p.innerHTML=`<img src="${u}" alt="Квитанция" data-a="zoom">`})}
+
+/* ================= ЗАПИСЬ: форма ================= */
+let F=null,FM=null;
+function newRec(cid,o){const v=o.vat&&o.vat.on?(num(o.vat.rate)):0;return{id:null,objectId:o.id,category:cid,date:todayISO(),periodStart:'',periodEnd:'',invoiceDate:'',paymentDate:'',paymentCard:'',vatRate:v,totalWithoutVat:0,totalWithVat:0,notes:'',photo:null}}
+function initType(){const t=cat(F.category,FM.obj).type;
+ if(t==='elec'&&!F.electricity)F.electricity={t1_old:0,t1_new:0,t1_rate:0,t1_sum:0,t2_old:0,t2_new:0,t2_rate:0,t2_sum:0,t3_old:0,t3_new:0,t3_rate:0,t3_sum:0};
+ if(t==='meter'){if(F.category==='water'){if(!F.water)F.water={old_reading:0,new_reading:0,rate:0}}else if(!F.meter)F.meter={old_reading:0,new_reading:0,rate:0}}
+ if(t==='fixed'&&F.taxPeriod==null)F.taxPeriod=''}
+function applyRates(){const o=FM.obj,t=cat(F.category,o).type,rule=ruleAt(o.id,F.date),last=lastOf(o.id,F.category,F.id);
+ if(t==='elec'){const e=F.electricity,le=last&&last.electricity;for(const i of[1,2,3]){const rr=rateOf(rule,'electricity',i);e['t'+i+'_rate']=rr!=null?rr:(le?num(le['t'+i+'_rate']):0)}}
+ if(t==='meter'){const m=mtr(F),lm=last&&mtr(last),rr=rateOf(rule,F.category);m.rate=rr!=null?rr:(lm?num(lm.rate):0)}
+ if(t==='fixed'){const rr=rateOf(rule,F.category);if(rr!=null&&!num(F.totalWithVat)){if(num(F.vatRate)){F.totalWithoutVat=rr;vatFromWithout()}else{F.totalWithVat=rr;vatFromWith()}}
+  else if(!num(F.totalWithVat)&&last&&cat(F.category,o).type==='fixed'){/* сумму прошлой записи не подставляем: пусть видно, что нужно ввести */}}}
+function prefill(){initType();const o=FM.obj,t=cat(F.category,o).type,last=lastOf(o.id,F.category);
+ if(t==='elec'){const e=F.electricity,le=last&&last.electricity;for(const i of[1,2,3]){e['t'+i+'_old']=le?num(le['t'+i+'_new']):0;e['t'+i+'_new']=e['t'+i+'_old'];e['t'+i+'_sum']=0}}
+ if(t==='meter'){const m=mtr(F),lm=last&&mtr(last);m.old_reading=lm?num(lm.new_reading):0;m.new_reading=m.old_reading}
+ if(t==='fixed'&&last&&last.taxPeriod&&/\d/.test(last.taxPeriod)===false)F.taxPeriod=last.taxPeriod;
+ const lc=records.filter(r=>valid(r)&&objId(r)===o.id&&r.paymentCard).sort(byDate)[0];if(lc&&!F.paymentCard)F.paymentCard=lc.paymentCard;
+ applyRates();if(t!=='fixed')recalc('reading')}
+function openForm(opt){opt=opt||{};const o=OBJ();
+ if(opt.id){const r=records.find(x=>x.id===opt.id);if(!r)return;F=J(r);FM={isNew:false,obj:S.objects.find(x=>x.id===objId(r))||o,orig:r};initType()}
+ else{if(!o.cats.length){toast('Включите хотя бы одну категорию в настройках объекта');return}
+  const cid=opt.cat&&o.cats.includes(opt.cat)?opt.cat:(FM&&FM.lastCat&&o.cats.includes(FM.lastCat)?FM.lastCat:o.cats[0]);F=newRec(cid,o);FM={isNew:true,obj:o,lastCat:cid};if(opt.date)F.date=opt.date;prefill()}
+ FM.more=!!(F.periodStart||F.periodEnd||F.invoiceDate);sheet('<div id="fwrap"></div>');drawForm()}
+function vatFromWithout(){F.totalWithVat=r2(num(F.totalWithoutVat)*(1+num(F.vatRate)/100))}
+function vatFromWith(){F.totalWithoutVat=r4(num(F.totalWithVat)/(1+num(F.vatRate)/100))}
+function recalc(src){const t=cat(F.category,FM.obj).type;
+ if(t==='elec'){const e=F.electricity;
+  if(src==='reading'){for(const i of[1,2,3])e['t'+i+'_sum']=r4(usage(e['t'+i+'_old'],e['t'+i+'_new'])*num(e['t'+i+'_rate']))}
+  if(src==='reading'||src==='sum'){F.totalWithoutVat=r4(num(e.t1_sum)+num(e.t2_sum)+num(e.t3_sum));vatFromWithout();return}}
+ if(t==='meter'&&src==='reading'){const m=mtr(F);F.totalWithoutVat=r4(usage(m.old_reading,m.new_reading)*num(m.rate));vatFromWithout();return}
+ if(src==='without'||src==='vat')vatFromWithout();
+ if(src==='with')vatFromWith()}
+const iv=(k,v,z)=>{const n=getK(k);return v!==undefined?v:(n==null||(n===0&&!z)?'':String(n))};
+function getK(k){return k.split('.').reduce((o,p)=>o==null?o:o[p],F)}
+function setK(k,v){const ps=k.split('.');let o=F;for(let i=0;i<ps.length-1;i++){o=o[ps[i]]=o[ps[i]]||{}}o[ps[ps.length-1]]=v}
+const inp=(k,label,src,ph,z)=>`<div class="fld"><label>${label}</label><input class="in num" inputmode="decimal" autocomplete="off" data-k="${k}" data-n="1" data-src="${src}" ${z?'data-z="1"':''} placeholder="${ph||'0'}" value="${esc(iv(k,undefined,z))}"></div>`;
+function drawForm(){const o=FM.obj,c=cat(F.category,o),t=c.type,showVat=(o.vat&&o.vat.on)||num(F.vatRate)>0;
+ let h=shh(FM.isNew?'Новая запись':'Изменить запись');
+ if(FM.isNew)h+=`<div class="cchips">`+o.cats.map(id=>{const k=cat(id,o);return`<button class="cc ${id===F.category?'on':''}" style="${cv(k)}" data-a="f-cat" data-cat="${id}">${k.emoji} ${esc(k.title)}</button>`}).join('')+`</div>`;
+ else h+=`<div class="fcat"><span class="ic s" style="${cv(c)}">${c.emoji}</span><b>${esc(c.title)}</b></div>`;
+ h+=`<div class="${FM.isNew&&S.objects.length>1?'g2':''}"><div class="fld"><label>Дата учёта</label><input class="in" type="date" data-k="date" data-src="date" value="${esc(F.date||'')}"></div>`+
+  (FM.isNew&&S.objects.length>1?`<div class="fld"><label>Объект</label><select class="in" data-a2="f-obj">${S.objects.map(x=>`<option value="${esc(x.id)}" ${x.id===o.id?'selected':''}>${esc(x.emoji+' '+x.name)}</option>`).join('')}</select></div>`:'')+`</div>`;
+ const rl=showVat?'Тариф без НДС':'Тариф';
+ if(t==='elec'){const e=F.electricity,n=Math.max(o.elec,num(e.t3_old)||num(e.t3_new)||num(e.t3_sum)?3:num(e.t2_old)||num(e.t2_new)||num(e.t2_sum)?2:1),nm=TNAMES[n];
+  h+=`<div class="box" style="${cv(c)}"><div class="bh">⚡ Показания счётчика<span data-o="tot">Итого ${fnum(usage(e.t1_old,e.t1_new)+usage(e.t2_old,e.t2_new)+usage(e.t3_old,e.t3_new))} ${c.unit}</span></div>`;
+  for(let i=1;i<=n;i++)h+=`<div class="trow"><div class="bh">${esc(nm[i-1])}<span data-o="u${i}">${fnum(usage(e['t'+i+'_old'],e['t'+i+'_new']))} ${c.unit}</span></div><div class="g4">
+   ${inp('electricity.t'+i+'_old','Было','reading')}${inp('electricity.t'+i+'_new','Стало','reading')}${inp('electricity.t'+i+'_rate',rl,'reading')}${inp('electricity.t'+i+'_sum','Сумма','sum')}</div></div>`;
+  h+=`</div>`}
+ if(t==='meter'){const k=F.category==='water'&&F.water?'water':'meter',m=F[k];
+  h+=`<div class="box" style="${cv(c)}"><div class="bh">${c.emoji} Показания счётчика<span data-o="um">${fnum(usage(m.old_reading,m.new_reading))} ${c.unit}</span></div><div class="g3">
+   ${inp(k+'.old_reading','Было','reading')}${inp(k+'.new_reading','Стало','reading')}${inp(k+'.rate',rl+' за '+c.unit,'reading')}</div></div>`}
+ if(t==='fixed')h+=`<div class="fld"><label>За какой период</label><input class="in" data-k="taxPeriod" data-src="text" placeholder="${/tax/.test(F.category)?'Например: 2026 год или 1-е полугодие':'Например: '+mTitle(String(F.date||todayISO()).slice(0,7))}" value="${esc(F.taxPeriod||'')}"></div>`;
+ if(showVat)h+=`<div class="box"><div class="g3">${inp('vatRate','НДС, %','vat','20',true)}${inp('totalWithoutVat','Без НДС','without')}${inp('totalWithVat','Итого с НДС','with')}</div></div>`;
+ else h+=`<div class="fld"><label>Сумма к оплате, ${esc(fmt(0,o.currency).replace(/[\d\s,.]/g,'').trim())}</label><input class="in big num" inputmode="decimal" data-k="totalWithVat" data-n="1" data-src="with" placeholder="0" value="${esc(iv('totalWithVat'))}"></div>`;
+ h+=`<label class="chk"><input type="checkbox" data-a2="f-paid" ${F.paymentDate?'checked':''}> Оплачено</label>`+
+  (F.paymentDate?`<div class="g2"><div class="fld"><label>Дата оплаты</label><input class="in" type="date" data-k="paymentDate" data-src="text" value="${esc(F.paymentDate)}"></div><div class="fld"><label>Способ оплаты</label><input class="in" data-k="paymentCard" data-src="text" placeholder="Карта *4589, СБП…" value="${esc(F.paymentCard||'')}"></div></div>`:'');
+ h+=FM.more?`<div class="g2"><div class="fld"><label>Начало периода</label><input class="in" type="date" data-k="periodStart" data-src="text" value="${esc(F.periodStart||'')}"></div><div class="fld"><label>Конец периода</label><input class="in" type="date" data-k="periodEnd" data-src="text" value="${esc(F.periodEnd||'')}"></div></div>
+  <div class="fld"><label>Дата выставления счёта</label><input class="in" type="date" data-k="invoiceDate" data-src="text" value="${esc(F.invoiceDate||'')}"></div>`
+  :`<button class="more" data-a="f-more">＋ Расчётный период и дата счёта</button>`;
+ h+=`<div class="fld"><label>Фото квитанции или счётчика${PRO.isPro()?'':'<span class="lock">PRO</span>'}</label><div class="photo" id="fPhoto"></div></div>
+  <div class="fld"><label>Заметки</label><textarea class="in" data-k="notes" data-src="text" placeholder="Например: перерасчёт, поверка счётчика…">${esc(F.notes||'')}</textarea></div>
+  <button class="btn" data-a="f-save">Сохранить</button>${FM.isNew?'':`<button class="btn danger" data-a="del" data-id="${esc(F.id)}">Удалить запись</button>`}`;
+ const w=$('fwrap');if(w)w.innerHTML=h;drawPhoto()}
+async function drawPhoto(){const p=$('fPhoto');if(!p)return;const has=!F._photoDel&&(F._photoBlob||F.photoId||F.photo);
+ const u=has?await photoURL(F):null;
+ p.innerHTML=(u?`<img src="${u}" alt="" data-a="zoom">`:'')+`<label class="pb">📷 ${u?'Заменить':'Добавить фото'}<input type="file" accept="image/*" class="hide" data-a2="f-photo"></label>`+(u?`<button class="lnk" style="color:var(--bad)" data-a="f-nophoto">Убрать фото</button>`:'')}
+function syncForm(except){const sh=$('sheet');if(!sh||!F)return;
+ sh.querySelectorAll('[data-n]').forEach(el=>{if(el===except)return;el.value=iv(el.dataset.k,undefined,!!el.dataset.z)});
+ const o=FM.obj,c=cat(F.category,o);
+ if(F.electricity&&c.type==='elec'){const e=F.electricity;for(const i of[1,2,3]){const s=sh.querySelector('[data-o="u'+i+'"]');if(s)s.textContent=fnum(usage(e['t'+i+'_old'],e['t'+i+'_new']))+' '+c.unit}
+  const s=sh.querySelector('[data-o="tot"]');if(s)s.textContent='Итого '+fnum(usage(e.t1_old,e.t1_new)+usage(e.t2_old,e.t2_new)+usage(e.t3_old,e.t3_new))+' '+c.unit}
+ if(c.type==='meter'){const m=mtr(F),s=sh.querySelector('[data-o="um"]');if(m&&s)s.textContent=fnum(usage(m.old_reading,m.new_reading))+' '+c.unit}}
+function compress(file){return new Promise((ok,no)=>{const img=new Image(),u=URL.createObjectURL(file);
+ img.onload=()=>{const M=1600;let w=img.naturalWidth,h=img.naturalHeight;const k=Math.min(1,M/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(u);cv.toBlob(b=>b?ok(b):no(new Error('не удалось сжать')),'image/jpeg',.8)};
+ img.onerror=()=>{URL.revokeObjectURL(u);no(new Error('не удалось открыть изображение'))};img.src=u})}
+async function saveForm(){
+ if(locked){toast('Запись отключена: сохранённые данные не прочитаны');return}
+ if(!F.date){toast('Укажите дату');return}
+ if(!(num(F.totalWithVat)>0)&&!confirm('Сумма — 0. Сохранить запись так?'))return;
+ const blob=F._photoBlob,del=F._photoDel,oldPid=FM.isNew?null:(FM.orig&&FM.orig.photoId);
+ const rec={};Object.keys(F).forEach(k=>{if(k[0]!=='_')rec[k]=F[k]});
+ if(FM.isNew)rec.id=String(Date.now());
+ let pid=null;
+ if(blob){pid='p'+Date.now().toString(36);try{await DB.put('photos',pid,blob)}catch(e){alert('Не удалось сохранить фото: '+(e&&e.message||e));return}rec.photoId=pid;rec.photo=null}
+ else if(del){delete rec.photoId;rec.photo=null}
+ const i=records.findIndex(x=>x.id===rec.id),backup=i>=0?records[i]:null;
+ if(FM.isNew)records.unshift(rec);else if(i>=0)records[i]=rec;
+ if(!persist()){if(FM.isNew)records=records.filter(x=>x!==rec);else if(i>=0)records[i]=backup;if(pid)DB.del('photos',pid).catch(()=>{});return}
+ if((blob||del)&&oldPid&&oldPid!==rec.photoId)DB.del('photos',oldPid).catch(()=>{});
+ const lastCat=FM.lastCat;closeSheet();FM={lastCat};render();toast('Сохранено ✓')}
+function delRec(id){const r=records.find(x=>x.id===id);if(!r||!confirm('Удалить эту запись?'))return;
+ const keep=records;records=records.filter(x=>x.id!==id);if(!persist()){records=keep;return}
+ if(r.photoId)DB.del('photos',r.photoId).catch(()=>{});closeSheet();render();toast('Запись удалена')}
+
+/* ================= АНАЛИТИКА ================= */
+function rangeMonths(){const now=mkey(new Date()),y=new Date().getFullYear();
+ if(A.range==='12m')return Array.from({length:12},(_,i)=>mAdd(now,i-11));
+ if(A.range==='y')return Array.from({length:12},(_,i)=>y+'-'+pad(i+1)).filter(m=>m<=now);
+ if(A.range==='py')return Array.from({length:12},(_,i)=>(y-1)+'-'+pad(i+1));
+ const ms=recs().map(r=>String(r.date||'').slice(0,7)).filter(m=>/^\d{4}-\d{2}$/.test(m)).sort();if(!ms.length)return[now];
+ const out=[];for(let m=ms[0];m<=ms[ms.length-1]&&out.length<240;m=mAdd(m,1))out.push(m);return out}
+function niceMax(v){if(v<=0)return 1;const e=Math.pow(10,Math.floor(Math.log10(v))),f=v/e;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e}
+function svgBars(months,get,keys,colors,unitFmt){
+ const W=340,Hh=200,pl=42,pr=6,pt=10,pb=22,iw=W-pl-pr,ih=Hh-pt-pb;
+ const tots=months.map(m=>keys.reduce((s,k)=>s+(get(m,k)||0),0)),mx=niceMax(Math.max(...tots,0)*1.05||1);
+ const bw=iw/months.length,step=Math.ceil(months.length/12);let g='<defs>'+keys.map((k,i)=>`<linearGradient id="bg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${colors[i][0]}"/><stop offset="1" stop-color="${colors[i][1]}"/></linearGradient>`).join('')+'</defs>';
+ for(let j=0;j<=4;j++){const y=pt+ih-ih*j/4;g+=`<line class="grid" x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}"/><text x="${pl-5}" y="${y+3}" text-anchor="end">${unitFmt(mx*j/4)}</text>`}
+ months.forEach((m,i)=>{const x=pl+i*bw+bw*.17,w=Math.max(2,bw*.66);let y0=pt+ih;
+  keys.forEach((k,ki)=>{const v=get(m,k)||0;if(v<=0)return;const hh=ih*v/mx;y0-=hh;g+=`<rect x="${x.toFixed(1)}" y="${y0.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(hh-1,.5).toFixed(1)}" rx="3" fill="url(#bg${ki})"><title>${mTitle(m)}: ${unitFmt(v)}</title></rect>`});
+  if(i%step===0)g+=`<text x="${(pl+i*bw+bw/2).toFixed(1)}" y="${Hh-6}" text-anchor="middle">${mShort(m)}${months.length>12&&m.endsWith('-01')?' '+m.slice(2,4):''}</text>`});
+ return`<svg class="chart" viewBox="0 0 ${W} ${Hh}" role="img">${g}</svg>`}
+function svgDonut(parts,center){const R=58,C=2*Math.PI*R,tot=parts.reduce((s,p)=>s+p.v,0)||1;let off=0,g='<defs>'+parts.map((p,i)=>`<linearGradient id="dg${i}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${p.c[0]}"/><stop offset="1" stop-color="${p.c[1]}"/></linearGradient>`).join('')+'</defs>';
+ parts.forEach((p,i)=>{const len=C*p.v/tot;g+=`<circle cx="75" cy="75" r="${R}" fill="none" stroke="url(#dg${i})" stroke-width="22" stroke-dasharray="${Math.max(len-1.5,0.5).toFixed(2)} ${(C-Math.max(len-1.5,0.5)).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 75 75)"/>`;off+=len});
+ return`<svg viewBox="0 0 150 150">${g}<text x="75" y="72" text-anchor="middle" style="font:800 15px -apple-system,sans-serif;fill:var(--ink)">${esc(center[0])}</text><text x="75" y="90" text-anchor="middle" style="font:11px -apple-system,sans-serif;fill:var(--mut)">${esc(center[1])}</text></svg>`}
+function vStat(){const o=OBJ();
+ let h=`<header class="hero compact"><div class="wrap">${heroTop()}<div class="htitle">Аналитика</div></div></header><main class="wrap flat">
+ <div class="seg" style="margin-bottom:14px">${[['12m','12 мес.'],['y','Этот год'],['py','Прошлый'],['all','Всё время']].map(([k,l])=>`<button class="${A.range===k?'on':''}" data-a="a-range" data-r="${k}">${l}</button>`).join('')}</div>`;
+ const body=statBody();
+ if(PRO.isPro())return h+body+foot()+'</main>';
+ return h+`<div class="locked"><div class="blur">${body}</div><div class="lc card"><div style="font-size:42px">📊</div><h3 style="justify-content:center">Аналитика — в PRO</h3><div class="mut">Графики расходов и потребления, доли категорий и сравнение с прошлым годом.</div><button class="btn" data-a="pro">Открыть PRO</button></div></div></main>`}
+function statBody(){const o=OBJ(),months=rangeMonths(),set=new Set(months),rs=recs().filter(r=>set.has(String(r.date||'').slice(0,7)));
+ const by={};months.forEach(m=>by[m]={});rs.forEach(r=>{const m=String(r.date).slice(0,7);by[m][r.category]=(by[m][r.category]||0)+amt(r)});
+ const keys=o.cats.filter(id=>rs.some(r=>r.category===id)).concat([...new Set(rs.map(r=>r.category))].filter(id=>!o.cats.includes(id)));
+ const tot=sum(rs),now=mkey(new Date()),active=months.filter(m=>m<=now),mt=months.map(m=>keys.reduce((s,k)=>s+(by[m][k]||0),0));
+ const mx=Math.max(...mt,0),mxM=months[mt.indexOf(mx)],un=sum(rs.filter(r=>!r.paymentDate)),avg=tot/Math.max(1,active.filter(m=>by[m]&&Object.keys(by[m]).length).length||1);
+ const K=(l,v,g)=>`<div class="kpi" style="background:${g}"><span>${l}</span><b class="num">${v}</b></div>`;
+ let h=`<div class="kpis">${K('Итого',fmt(tot),'linear-gradient(135deg,#6366f1,#a855f7)')}${K('В среднем в месяц',fmt(avg),'linear-gradient(135deg,#ec4899,#f43f5e)')}${K('Самый дорогой'+(mx?' · '+mTitle(mxM).toLowerCase():''),fmt(mx),'linear-gradient(135deg,#f59e0b,#f97316)')}${K('Не оплачено',fmt(un),un?'linear-gradient(135deg,#ef4444,#be123c)':'linear-gradient(135deg,#10b981,#059669)')}</div>`;
+ if(!rs.length)return h+`<div class="card empty"><div class="e">📈</div>За этот период записей нет.</div>`;
+ h+=`<div class="card"><h3>Расходы по месяцам</h3>${svgBars(months,(m,k)=>by[m][k],keys,keys.map(k=>cat(k).g),v=>fshort(v))}</div>`;
+ const parts=keys.map(k=>({k,v:rs.filter(r=>r.category===k).reduce((s,r)=>s+amt(r),0),c:cat(k).g})).filter(p=>p.v>0).sort((a,b)=>b.v-a.v);
+ h+=`<div class="card"><h3>Куда уходят деньги</h3><div class="donut">${svgDonut(parts,[fshort(tot),o.currency])}<div class="leg">${parts.map(p=>{const c=cat(p.k);return`<div><i style="background:linear-gradient(135deg,${c.g[0]},${c.g[1]})"></i><span>${c.emoji} ${esc(c.title)}</span><b class="num">${fmt(p.v)}</b><em>${Math.round(p.v/tot*100)}%</em></div>`}).join('')}</div></div></div>`;
+ const meters=keys.filter(k=>cat(k).type!=='fixed');
+ if(meters.length){if(!meters.includes(A.cons))A.cons=meters[0];const c=cat(A.cons),u={};months.forEach(m=>u[m]=0);rs.filter(r=>r.category===A.cons).forEach(r=>{u[String(r.date).slice(0,7)]+=usageOf(r)||0});
+  const tu=Object.values(u).reduce((a,b)=>a+b,0),cm=months.filter(m=>u[m]>0).length;
+  h+=`<div class="card"><h3>Потребление <small>${cm?'в среднем '+fnum(tu/cm,1)+' '+c.unit+' в месяц':''}</small></h3><div class="cchips">${meters.map(k=>{const x=cat(k);return`<button class="cc ${A.cons===k?'on':''}" style="${cv(x)}" data-a="a-cons" data-cat="${k}">${x.emoji} ${esc(x.title)}</button>`}).join('')}</div>
+   ${svgBars(months,(m)=>u[m],['u'],[c.g],v=>fnum(v,v<10?1:0))}<div class="mut small" style="margin-top:6px">Всего за период: <b>${fnum(tu)} ${c.unit}</b></div></div>`}
+ const y=new Date().getFullYear(),cmN=new Date().getMonth()+1,yy=recs();
+ const both=[];for(let i=1;i<=cmN;i++){const a=(y-1)+'-'+pad(i),c=y+'-'+pad(i);if(yy.some(r=>String(r.date).startsWith(a))&&yy.some(r=>String(r.date).startsWith(c)))both.push(i)}
+ const yr=(Y,k)=>yy.filter(r=>r.category===k&&String(r.date).startsWith(Y+'-')&&both.includes(+String(r.date).slice(5,7))).reduce((s,r)=>s+amt(r),0);
+ const ks=o.cats.filter(k=>yr(y,k)||yr(y-1,k));
+ if(ks.length&&both.length){let t1=0,t0=0;
+  h+=`<div class="card"><h3>${y} и ${y-1} <small>${both.length===cmN?'январь — '+MON[cmN-1].toLowerCase():'одни и те же месяцы: '+both.map(i=>MONS[i-1]).join(', ')}</small></h3><table class="tbl"><tr><th>Категория</th><th>${y-1}</th><th>${y}</th><th>±</th></tr>`+
+   ks.map(k=>{const a=yr(y-1,k),b=yr(y,k);t0+=a;t1+=b;const d=a?Math.round((b-a)/a*100):null;return`<tr><td>${cat(k).emoji} ${esc(cat(k).title)}</td><td class="num">${fmt(a)}</td><td class="num">${fmt(b)}</td><td class="num ${d>0?'up':d<0?'down':''}">${d==null?'—':(d>0?'+':'')+d+'%'}</td></tr>`}).join('')+
+   `<tr><th>Итого</th><th class="num">${fmt(t0)}</th><th class="num">${fmt(t1)}</th><th class="num ${t0&&t1>t0?'up':'down'}">${t0?((t1>t0?'+':'')+Math.round((t1-t0)/t0*100)+'%'):'—'}</th></tr></table></div>`}
+ return h}
+
+/* ================= НАСТРОЙКИ ================= */
+function vSet(){const o=OBJ(),pro=PRO.isPro(),L=pro?'':'<span class="lock">PRO</span>';
+ const row=(a,ri,t,s,extra)=>`<button class="row" data-a="${a}" ${extra||''}><span class="ri">${ri}</span><span class="rt">${t}${s?`<span>${s}</span>`:''}</span><span class="chev">›</span></button>`;
+ let h=`<header class="hero compact"><div class="wrap">${heroTop()}<div class="htitle">Ещё</div></div></header><main class="wrap flat">${PRO.cardHTML()}
+ <div class="card"><h3>Жильё</h3>
+  ${row('obj-edit',esc(o.emoji),esc(o.name),'Валюта '+o.currency+' · '+plural(o.cats.length,'категория','категории','категорий')+(o.vat.on?' · НДС '+o.vat.rate+'%':''),'data-id="'+esc(o.id)+'"')}
+  ${row('objs','🏘️','Все объекты'+(S.objects.length>1?' · '+S.objects.length:''),'Квартира, дача, жильё в другой стране'+(pro?'':' — несколько объектов в PRO'))}
+  ${row('tariffs','🏷️','Тарифы'+L,'Цены с датой начала — суммы считаются сами')}
+  ${row('remind','⏰','Напоминания'+L,'Когда передавать показания и оплачивать')}
+ </div>
+ <div class="card"><h3>Оформление</h3><div class="seg">${[['auto','Как в системе'],['light','Светлая'],['dark','Тёмная']].map(([k,l])=>`<button class="${S.theme===k?'on':''}" data-a="theme" data-v="${k}">${l}</button>`).join('')}</div></div>
+ <div class="card"><h3>Данные</h3>
+  ${row('backup','💾','Сохранить резервную копию',(+LS.get('ku.lastBackup')?'Последняя: '+new Date(+LS.get('ku.lastBackup')).toLocaleDateString('ru-RU'):'Ещё не сохраняли')+' · файл со всеми записями и фото')}
+  ${row('imp','📂','Восстановить из копии','Файл .json из этого или прежнего приложения')}
+  ${row('excel','📊','Выгрузить в Excel'+L,'Все записи и свод по месяцам')}
+  ${row('snaps','🛟','Автокопии','Сохраняются сами перед обновлением и восстановлением')}
+  ${OLDHOST?`<a class="row" href="perenos.html" style="text-decoration:none"><span class="ri">🚚</span><span class="rt">Перенести данные на новый адрес<span>${NEWURL.replace('https://','').replace(/\/$/,'')} — со всеми записями и фото</span></span><span class="chev">›</span></a>`
+  :`<a class="row" href="migrate.html" style="text-decoration:none"><span class="ri">🚚</span><span class="rt">Перенести данные из старой версии<span>Если пользовались приложением по адресу elenakirsbg.github.io</span></span><span class="chev">›</span></a>`}
+  ${row('wipe','🗑️','Удалить все записи','Перед удалением сохраняется автокопия')}
+ </div>
+ <div class="card"><h3>Помощь</h3>
+  ${row('help','📖','Как пользоваться','Установка, показания, тарифы, сохранность данных')}
+  <a class="row" href="https://t.me/ekirsanova_psy" target="_blank" rel="noopener" style="text-decoration:none"><span class="ri">✈️</span><span class="rt">Написать автору<span>Telegram @ekirsanova_psy</span></span><span class="chev">›</span></a>
+  <a class="row" href="https://elenakirsanova.com/apps/" target="_blank" rel="noopener" style="text-decoration:none"><span class="ri">✨</span><span class="rt">Другие приложения автора<span>elenakirsanova.com</span></span><span class="chev">›</span></a>
+ </div>`;
+ return h+foot()+`</main>`}
+
+/* объекты */
+function objsSheet(){const pro=PRO.isPro();
+ sheet(shh('Объекты')+`<div class="mut small">Каждый объект — отдельный учёт со своей валютой, категориями и тарифами.</div><div class="card" style="box-shadow:none;padding:0;margin-top:10px">`+
+  S.objects.map(o=>`<button class="row" data-a="obj-pick" data-id="${esc(o.id)}"><span class="ri" style="font-size:20px">${esc(o.emoji)}</span><span class="rt">${esc(o.name)}<span>${o.currency} · ${plural(recsOf(o.id).length,'запись','записи','записей')}</span></span><span class="chev">${o.id===S.active?'✓':'›'}</span></button>`).join('')+
+  `</div><button class="btn" data-a="obj-new">＋ Добавить объект${pro||S.objects.length<1?'':' (PRO)'}</button>`)}
+let E=null;
+function objEdit(id){const o=id?S.objects.find(x=>x.id===id):null;
+ E=o?J(o):Object.assign(J(defaultSettings('ru').objects[0]),{id:'o'+Date.now().toString(36),name:'',_new:true,_preset:'ru'});drawObj()}
+function drawObj(){const pro=PRO.isPro(),all=Object.keys(CATS).concat(S.customCats.map(c=>c.id));
+ const order=E.cats.concat(all.filter(id=>!E.cats.includes(id)));
+ let h=shh(E._new?'Новый объект':'Объект')+(E._new?`<div class="fld"><label>Где находится</label><div class="seg">${Object.entries(PRESETS).map(([k,p])=>`<button class="${E._preset===k?'on':''}" data-a="o-preset" data-v="${k}">${p.label}</button>`).join('')}</div></div>`:'')+
+  `<div class="fld"><label>Название</label><input class="in" data-e="name" maxlength="40" placeholder="Например: Квартира в Москве" value="${esc(E.name)}"></div>
+  <div class="fld"><label>Значок</label><div class="emo">${EMOJIS.map(e=>`<button class="${E.emoji===e?'on':''}" data-a="o-emoji" data-v="${e}">${e}</button>`).join('')}</div></div>
+  <div class="g2"><div class="fld"><label>Валюта</label><select class="in" data-e="currency">${CURRENCIES.map(([c,l])=>`<option value="${c}" ${E.currency===c?'selected':''}>${l}</option>`).join('')}</select></div>
+   <div class="fld"><label>Тарифов у электросчётчика</label><div class="seg">${[1,2,3].map(n=>`<button class="${E.elec===n?'on':''}" data-a="o-elec" data-v="${n}">${n}</button>`).join('')}</div></div></div>
+  <label class="chk"><span class="sw"><input type="checkbox" data-e="vatOn" ${E.vat.on?'checked':''}><i></i></span> В счетах цены указаны без НДС — добавлять НДС</label>
+  ${E.vat.on?`<div class="fld" style="max-width:160px"><label>Ставка НДС, %</label><input class="in" inputmode="decimal" data-e="vatRate" value="${esc(E.vat.rate)}"></div>`:''}
+  <div class="fld"><label>Категории — включите нужные</label><div>`+order.map(id=>{const c=cat(id,E),on=E.cats.includes(id),i=E.cats.indexOf(id),cu=S.customCats.find(x=>x.id===id);
+   return`<div class="catl"><span class="ic s" style="${cv(c)}">${c.emoji}</span><span class="nm">${esc(c.title)}<span>${c.type==='elec'?'счётчик, '+c.unit:c.type==='meter'?'счётчик, '+c.unit:'сумма за период'}${cu?' · своя':''}</span></span>
+    ${on&&i>0?`<button class="mini" data-a="o-up" data-v="${id}" aria-label="Выше">↑</button>`:''}<button class="mini" data-a="o-ren" data-v="${id}" aria-label="Переименовать">✏️</button>
+    <label class="sw"><input type="checkbox" data-a2="o-cat" value="${id}" ${on?'checked':''}><i></i></label></div>`}).join('')+`</div>
+  <button class="btn sec" data-a="o-custom">＋ Своя категория</button></div>
+  <button class="btn" data-a="o-save">Сохранить</button>`+(!E._new&&S.objects.length>1?`<button class="btn danger" data-a="o-del">Удалить объект</button>`:'');
+ if($('sheet').classList.contains('on')&&$('sheet').querySelector('#oedit'))sheetBody('<div id="oedit"></div>'),$('oedit').innerHTML=h;else{sheet('<div id="oedit"></div>');$('oedit').innerHTML=h}}
+function objSave(){E.name=(E.name||'').trim();if(!E.name){toast('Введите название');return}
+ const o=J(E);delete o._new;delete o._preset;const i=S.objects.findIndex(x=>x.id===o.id);
+ if(i>=0)S.objects[i]=o;else{S.objects.push(o);S.active=o.id}
+ fixSettings();saveSettings();closeSheet();render();toast('Сохранено ✓')}
+
+/* тарифы */
+let T=null;
+function tariffsSheet(){if(needPro())return;const o=OBJ(),rs=rulesFor(o.id);
+ sheet(shh('Тарифы · '+esc(o.name))+`<div class="mut small">Укажите цены и месяц, с которого они действуют. При новой записи тариф подставится сам, а сумма посчитается по показаниям. Старые записи не меняются.</div>`+
+  (rs.length?rs.map((r,i)=>`<div class="card" style="box-shadow:none;background:var(--card2);margin-top:10px;padding:12px"><h3 style="margin:0 0 6px">с ${MONG[+String(r.effectiveMonth).slice(5,7)-1]||''} ${String(r.effectiveMonth).slice(0,4)} <span><button class="lnk" data-a="t-edit" data-i="${rules.indexOf(r)}">Изменить</button></span></h3><div class="small">${ruleText(r,o)}</div></div>`).join('')
+  :`<div class="empty"><div class="e">🏷️</div>Тарифов пока нет</div>`)+`<button class="btn" data-a="t-new">＋ Новый тариф</button>`)}
+function ruleText(r,o){const out=[];o.cats.forEach(id=>{const c=cat(id,o);
+ if(c.type==='elec'){const n=o.elec;const v=[1,2,3].slice(0,n).map(i=>rateOf(r,'electricity',i)).filter(x=>x!=null);if(v.length)out.push(c.emoji+' '+v.map(x=>fnum(x,6)).join(' / ')+' за '+c.unit)}
+ else{const v=rateOf(r,id);if(v!=null)out.push(c.emoji+' '+fnum(v,6)+(c.type==='meter'?' за '+c.unit:' в месяц'))}});return out.join('<br>')||'—'}
+function tEdit(i){const o=OBJ();T=i!=null?{i,r:J(rules[i])}:{i:null,r:{effectiveMonth:mkey(new Date()),objectId:o.id,electricity:{},rates:{}}};
+ const cur=i==null?ruleAt(o.id):null;if(cur){T.r.electricity=J(cur.electricity||{});T.r.rates=J(cur.rates||{});if(cur.waterRate!=null)T.r.waterRate=cur.waterRate}
+ const r=T.r;let h=shh(i!=null?'Изменить тариф':'Новый тариф')+`<div class="fld"><label>Действует с месяца</label><input class="in" type="month" data-t="effectiveMonth" value="${esc(r.effectiveMonth)}"></div>`;
+ o.cats.forEach(id=>{const c=cat(id,o);
+  if(c.type==='elec'){h+=`<div class="box" style="${cv(c)}"><div class="bh">${c.emoji} ${esc(c.title)} — цена за ${c.unit}${o.vat.on?' без НДС':''}</div><div class="g3">`+[1,2,3].slice(0,o.elec).map(n=>`<div class="fld"><label>${esc(TNAMES[o.elec][n-1])}</label><input class="in num" inputmode="decimal" data-t="el.${n}" value="${esc(rateOf(r,'electricity',n)??'')}" placeholder="0.00"></div>`).join('')+`</div></div>`}
+  else h+=`<div class="fld"><label>${c.emoji} ${esc(c.title)} — ${c.type==='meter'?'цена за '+c.unit:'сумма в месяц (если постоянная)'}</label><input class="in num" inputmode="decimal" data-t="r.${id}" value="${esc(rateOf(r,id)??'')}" placeholder="${c.type==='meter'?'0.00':'не обязательно'}"></div>`});
+ h+=`<button class="btn" data-a="t-save">Сохранить тариф</button>`+(i!=null?`<button class="btn danger" data-a="t-del">Удалить тариф</button>`:'');sheet(h)}
+function tSave(){const r=T.r,sh=$('sheet');r.effectiveMonth=sh.querySelector('[data-t="effectiveMonth"]').value;if(!/^\d{4}-\d{2}$/.test(r.effectiveMonth)){toast('Укажите месяц');return}
+ r.electricity=r.electricity||{};r.rates=r.rates||{};
+ sh.querySelectorAll('[data-t]').forEach(el=>{const k=el.dataset.t,v=el.value.trim();if(k==='effectiveMonth')return;
+  if(k.startsWith('el.')){r.electricity['t'+k.slice(3)+'_rate']=v===''?0:num(v)}
+  else{const id=k.slice(2);if(id==='water'){if(v==='')delete r.waterRate;else r.waterRate=num(v)}else if(v==='')delete r.rates[id];else r.rates[id]=num(v)}});
+ const oid=OBJ().id;if(oid!==firstObj().id||r.objectId)r.objectId=oid;
+ if(T.i!=null)rules[T.i]=r;else{const ex=rules.findIndex(x=>x.effectiveMonth===r.effectiveMonth&&(x.objectId&&S.objects.some(o=>o.id===x.objectId)?x.objectId:firstObj().id)===oid);if(ex>=0)rules[ex]=r;else rules.push(r)}
+ if(saveRules()){toast('Тариф сохранён ✓');tariffsSheet()}}
+
+/* напоминания */
+function remindSheet(){if(needPro())return;const o=OBJ(),R=o.remind||{};
+ sheet(shh('Напоминания · '+esc(o.name))+`<div class="mut small">Когда придёт время, на главном экране появится подсказка: какие показания ещё не внесены и что не оплачено.</div>
+  <div class="box"><div class="bh">📟 Передача показаний</div><div class="g2"><div class="fld"><label>С какого числа</label><input class="in" inputmode="numeric" data-r="readFrom" value="${esc(R.readFrom||'')}" placeholder="например, 15"></div><div class="fld"><label>По какое</label><input class="in" inputmode="numeric" data-r="readTo" value="${esc(R.readTo||'')}" placeholder="например, 25"></div></div></div>
+  <div class="box"><div class="bh">💳 Оплата</div><div class="fld"><label>Оплачивать до какого числа</label><input class="in" inputmode="numeric" data-r="payDay" value="${esc(R.payDay||'')}" placeholder="например, 10"></div></div>
+  <button class="btn" data-a="r-save">Сохранить</button>`)}
+
+/* копии */
+const blobToURL=b=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(b)});
+function urlToBlob(u){const m=/^data:([^;,]*)(;base64)?,(.*)$/.exec(u);if(!m)return null;const s=m[2]?atob(m[3]):decodeURIComponent(m[3]);const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return new Blob([a],{type:m[1]||'image/jpeg'})}
+async function saveFile(blob,name){let f=null;try{f=new File([blob],name,{type:blob.type})}catch(e){}
+ const mob=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ if(f&&mob&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:name});return'share'}catch(e){if(e&&e.name==='AbortError')return'cancel'}}
+ const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000);return'download'}
+async function backup(){toast('Готовлю копию…');const photos={};
+ for(const r of records){if(r&&r.photoId&&!photos[r.photoId]){try{const b=await DB.get('photos',r.photoId);if(b)photos[r.photoId]=await blobToURL(b)}catch(e){}}}
+ const data={app:'kommunal',format:2,version:VERSION,date:new Date().toISOString(),records,tariffRules:rulesVirtual?[]:rules,settings:S,photos};
+ const res=await saveFile(new Blob([JSON.stringify(data)],{type:'application/json'}),'kommunalka-kopiya-'+todayISO()+'.json');
+ if(res!=='cancel'){try{LS.set('ku.lastBackup',String(Date.now()))}catch(e){}render();toast(res==='download'?'Копия сохранена в «Загрузки» ✓':'Копия готова ✓')}}
+function rawDownload(){saveFile(new Blob([JSON.stringify({records_raw:LS.get(K_REC),tariffs_raw:LS.get(K_TAR),date:new Date().toISOString()},null,1)],{type:'application/json'}),'kommunalka-syrye-dannye-'+todayISO()+'.json')}
+let IMP=null;
+async function importFile(file){let d;try{d=JSON.parse(await file.text())}catch(e){alert('Это не файл копии (не удалось прочитать).');return}
+ let rec=null,tar=null,set=null,ph={};
+ if(Array.isArray(d))rec=d;else if(d&&Array.isArray(d.records)){rec=d.records;if(Array.isArray(d.tariffRules))tar=d.tariffRules;if(d.settings&&Array.isArray(d.settings.objects)&&d.settings.objects.length)set=d.settings;ph=d.photos&&typeof d.photos==='object'?d.photos:{}}
+ else{alert('Неверный формат файла: в нём нет записей приложения.');return}
+ rec=rec.filter(valid);IMP={rec,tar,set,ph};
+ sheet(shh('Восстановить из копии')+`<div class="ban info"><span class="bi">📂</span><div><b>${esc(file.name)}</b>${plural(rec.length,'запись','записи','записей')}${tar?' · '+plural(tar.length,'тариф','тарифа','тарифов'):''}${Object.keys(ph).length?' · '+plural(Object.keys(ph).length,'фото','фото','фото'):''}</div></div>
+  <div class="mut small">Перед восстановлением текущие данные сохранятся в автокопию — их можно будет вернуть.</div>
+  ${records.length&&!locked?`<button class="btn" data-a="imp-merge">Добавить к текущим записям</button><div class="mut small" style="margin-top:4px">Совпадающие записи не дублируются.</div>`:''}
+  <button class="btn ${records.length&&!locked?'sec':''}" data-a="imp-replace">Заменить все данные</button>`)}
+async function doImport(mode){const{rec,tar,set,ph}=IMP;
+ if(mode==='replace'&&records.length&&!confirm('Заменить все текущие записи данными из файла? Текущие сохранятся в автокопию.'))return;
+ await snapshot('Перед восстановлением '+new Date().toLocaleString('ru-RU'));
+ for(const[id,u]of Object.entries(ph)){try{const b=urlToBlob(u);if(b)await DB.put('photos',id,b)}catch(e){}}
+ if(mode==='replace'){records=rec;if(tar){rules=tar;rulesVirtual=false}if(set)S=set}
+ else{const ids=new Set(records.map(r=>r&&r.id));rec.forEach(r=>{if(!ids.has(r.id))records.push(r)});
+  if(tar)tar.forEach(t=>{if(!rules.some(x=>x.effectiveMonth===t.effectiveMonth&&(x.objectId||'')===(t.objectId||'')))rules.push(t)});
+  if(set){set.objects.forEach(o=>{if(!S.objects.some(x=>x.id===o.id))S.objects.push(o)});(set.customCats||[]).forEach(c=>{if(!S.customCats.some(x=>x.id===c.id))S.customCats.push(c)})}}
+ locked=false;fixSettings();const ok=persist();if(tar||rulesVirtual===false)saveRules();saveSettings();applyTheme();closeSheet();render();
+ toast(ok?'Данные восстановлены ✓':'Не удалось записать данные')}
+async function snapsSheet(){let keys=[];try{keys=await DB.keys('snaps')}catch(e){}
+ const items=[];for(const k of keys){try{const s=await DB.get('snaps',k);let n=0;try{n=(JSON.parse(s.rec||'[]')||[]).length}catch(e){n='?'}items.push({k,d:s.date,n})}catch(e){}}
+ items.sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+ sheet(shh('Автокопии')+`<div class="mut small">Приложение само сохраняет копию данных перед обновлением, восстановлением и удалением. Они хранятся на этом устройстве.</div>`+
+  (items.length?items.map(it=>`<button class="row" data-a="snap-restore" data-k="${esc(it.k)}"><span class="ri">🛟</span><span class="rt">${esc(it.k)}<span>${new Date(it.d).toLocaleString('ru-RU')} · ${typeof it.n==='number'?plural(it.n,'запись','записи','записей'):'?'}</span></span><span class="chev">↺</span></button>`).join(''):`<div class="empty"><div class="e">🛟</div>Автокопий пока нет</div>`))}
+async function snapRestore(k){const s=await DB.get('snaps',k);if(!s)return;
+ if(!confirm('Вернуть данные из автокопии «'+k+'»? Текущие данные тоже сохранятся в автокопию.'))return;
+ await snapshot('Перед возвратом автокопии '+new Date().toLocaleString('ru-RU'));
+ try{if(s.rec!=null)LS.set(K_REC,s.rec);else LS.del(K_REC);if(s.tar!=null)LS.set(K_TAR,s.tar);if(s.set!=null)LS.set(K_SET,s.set)}catch(e){alert('Не удалось восстановить: '+e.message);return}
+ location.reload()}
+async function wipe(){if(!records.length){toast('Записей нет');return}
+ if(!confirm('Удалить все записи и тарифы? Перед удалением сохранится автокопия.'))return;if(!confirm('Точно удалить? Восстановить можно будет через «Автокопии».'))return;
+ await snapshot('Перед удалением всех записей '+new Date().toLocaleString('ru-RU'));records=[];rules=[];persist();saveRules();render();toast('Все записи удалены')}
+
+/* Excel */
+function loadXLSX(){return window.XLSX?Promise.resolve(window.XLSX):new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>window.XLSX?ok(window.XLSX):no(new Error('xlsx'));s.onerror=()=>no(new Error('нет интернета'));document.head.appendChild(s)})}
+async function excel(){if(needPro())return;
+ const rows=[['Дата','Объект','Валюта','Категория','Период','Было','Стало','Расход','Ед.','Тариф','Без НДС','НДС, %','Итого','Оплачено','Способ оплаты','Счёт от','Заметки']];
+ records.filter(valid).slice().sort(byDate).reverse().forEach(r=>{const o=S.objects.find(x=>x.id===objId(r)),c=cat(r.category,o);let b='',a='',rate='';
+  if(c.type==='elec'&&r.electricity){const e=r.electricity,n=Math.max(o.elec,num(e.t3_new)?3:num(e.t2_new)?2:1);b=[1,2,3].slice(0,n).map(i=>e['t'+i+'_old']).join(' / ');a=[1,2,3].slice(0,n).map(i=>e['t'+i+'_new']).join(' / ');rate=[1,2,3].slice(0,n).map(i=>e['t'+i+'_rate']).join(' / ')}
+  else if(c.type==='meter'){const m=mtr(r);if(m){b=num(m.old_reading);a=num(m.new_reading);rate=num(m.rate)}}
+  const u=usageOf(r);rows.push([r.date||'',o.name,o.currency,c.title,r.taxPeriod||(r.periodStart||r.periodEnd?(r.periodStart||'')+' — '+(r.periodEnd||''):''),b,a,u==null?'':u,c.type==='fixed'?'':c.unit,rate,num(r.totalWithoutVat),num(r.vatRate),amt(r),r.paymentDate||'',r.paymentCard||'',r.invoiceDate||'',r.notes||''])});
+ const o=OBJ(),ms=[...new Set(recs().map(r=>String(r.date).slice(0,7)))].sort(),cs=o.cats;
+ const piv=[['Месяц'].concat(cs.map(id=>cat(id).title),['Итого'])];ms.forEach(m=>{const line=[mTitle(m)];let t=0;cs.forEach(id=>{const v=r2(sum(recs().filter(r=>r.category===id&&String(r.date).startsWith(m))));t+=v;line.push(v)});line.push(r2(t));piv.push(line)});
+ try{const X=await loadXLSX(),wb=X.utils.book_new(),s1=X.utils.aoa_to_sheet(rows);s1['!cols']=rows[0].map((_,i)=>({wch:[11,16,7,20,18,12,12,9,6,10,10,7,10,11,16,11,30][i]||12}));
+  X.utils.book_append_sheet(wb,s1,'Записи');X.utils.book_append_sheet(wb,X.utils.aoa_to_sheet(piv),('По месяцам — '+o.name).slice(0,31).replace(/[\\/?*\[\]:]/g,' '));
+  const out=X.write(wb,{bookType:'xlsx',type:'array'});await saveFile(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'kommunalka-'+todayISO()+'.xlsx')}
+ catch(e){const csv='﻿'+rows.map(l=>l.map(v=>{v=String(v??'');return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(';')).join('\r\n');
+  toast('Excel не загрузился без интернета — сохраняю таблицу CSV');await saveFile(new Blob([csv],{type:'text/csv'}),'kommunalka-'+todayISO()+'.csv')}}
+
+/* справка */
+function helpSheet(){sheet(shh('Как пользоваться')+`<div style="font-size:15px">
+ <h3>📲 Установка</h3><p><b>iPhone, iPad:</b> откройте приложение в Safari → «Поделиться» ⬆︎ → «На экран „Домой“». Открывайте приложение только с иконки — так оно работает без интернета и данные хранятся надёжно.<br><b>Android:</b> Chrome → меню ⋮ → «Установить приложение».<br><b>Компьютер:</b> Chrome или Edge → значок установки ⊕ в адресной строке.</p>
+ <h3>🧾 Записи</h3><p>Нажмите на категорию на главном экране или на «+». Старые показания подставятся из прошлой записи — введите новые, и расход с суммой посчитаются сами. Сумму всегда можно поправить вручную, если в счёте она другая.</p>
+ <h3>🏷️ Тарифы</h3><p>В «Ещё → Тарифы» укажите цены и месяц, с которого они действуют. Когда тариф меняется — добавьте новый: старые записи останутся со старыми ценами.</p>
+ <h3>🏘️ Объекты</h3><p>Квартира, дача, жильё в другой стране — у каждого свои валюта, категории, тарифы и статистика. Переключатель — вверху экрана.</p>
+ <h3>💳 Оплата</h3><p>Отметка «Оплачено» с датой и способом оплаты. На главной видно, сколько ещё к оплате, а в «Истории» можно отфильтровать неоплаченное.</p>
+ <h3>💾 Сохранность данных</h3><p>Все данные хранятся только на вашем устройстве — никуда не отправляются. Раз в месяц сохраняйте резервную копию («Ещё → Сохранить резервную копию») в «Файлы», на диск или себе в мессенджер. Новый телефон: установите приложение и выберите «Восстановить из копии».<br>Не очищайте данные сайтов в настройках браузера — вместе с ними удалятся и записи.</p>
+ <h3>⭐ PRO</h3><p>Первые 7 дней открыто всё. Дальше показания, платежи, история и копии — бесплатно навсегда, а аналитика, тарифы, несколько объектов, фото квитанций, напоминания и Excel — по ключу PRO. Ключ покупается один раз на сайте elenakirsanova.com.</p>
+ <p class="mut small">© 2026 Елена Кирсанова. Все права защищены. Вопросы: Telegram <a href="https://t.me/ekirsanova_psy" target="_blank" rel="noopener">@ekirsanova_psy</a></p></div>`)}
+
+/* первый запуск */
+let OB={p:'ru',name:'',cur:'RUB'};
+function onboarding(){const h=shh('Добро пожаловать! 👋',true)+`<div class="mut">«Коммуналка» — учёт коммунальных платежей и показаний счётчиков. Настроим за полминуты.</div>
+ <div class="fld"><label>Где находится жильё</label><div class="seg">${Object.entries(PRESETS).map(([k,p])=>`<button class="${OB.p===k?'on':''}" data-a="ob-p" data-v="${k}">${p.label}</button>`).join('')}</div></div>
+ <div class="fld"><label>Название</label><input class="in" id="obName" maxlength="40" placeholder="Например: Квартира" value="${esc(OB.name)}"></div>
+ <div class="fld"><label>Валюта</label><select class="in" id="obCur">${CURRENCIES.map(([c,l])=>`<option value="${c}" ${OB.cur===c?'selected':''}>${l}</option>`).join('')}</select></div>
+ <div class="mut small" style="margin-top:10px">Категории: ${PRESETS[OB.p].cats.map(id=>(CATS[id].emoji+' '+(PRESETS[OB.p].names[id]||CATS[id].title))).join(', ')}. Их можно изменить в любой момент.</div>
+ <button class="btn" data-a="ob-go">Начать</button>
+ <a class="btn sec" href="migrate.html">Пользовались старой версией? Перенести данные</a>`;
+ if($('sheet').classList.contains('on'))sheetBody(h);else sheet(h,true)}
+
+/* ================= отрисовка и события ================= */
+function render(){applyTheme();const v=tab==='hist'?vHist():tab==='stat'?vStat():tab==='set'?vSet():vHome();$('root').innerHTML=v;
+ document.querySelectorAll('#tabs [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===tab))}
+function go(t){tab=t;render();window.scrollTo(0,0)}
+const ACT={
+ 'sh-close':()=>{if(!sheetLock)closeSheet()},
+ tab:b=>{closeSheet();go(b.dataset.t)},
+ pro:()=>PRO.open(),
+ add:b=>{if(locked){toast('Запись отключена: сохранённые данные не прочитаны');return}openForm({cat:b.dataset.cat,date:tab==='home'&&curMonth!==mkey(new Date())?curMonth+'-'+pad(Math.min(28,new Date().getDate())):null})},
+ 'm-prev':()=>{curMonth=mAdd(curMonth,-1);render()},
+ 'm-next':()=>{if(curMonth<mkey(new Date()))curMonth=mAdd(curMonth,1);render()},
+ rec:b=>showRec(b.dataset.id),
+ edit:b=>openForm({id:b.dataset.id}),
+ again:b=>{const r=records.find(x=>x.id===b.dataset.id);if(!r)return;closeSheet();if(r.objectId&&r.objectId!==S.active&&S.objects.some(o=>o.id===r.objectId)){S.active=r.objectId;saveSettings()}openForm({cat:r.category})},
+ del:b=>delRec(b.dataset.id),
+ paid:b=>{const r=records.find(x=>x.id===b.dataset.id);if(!r)return;const was=r.paymentDate;r.paymentDate=todayISO();if(!persist()){r.paymentDate=was;return}closeSheet();render();toast('Отмечено как оплаченное ✓')},
+ zoom:b=>{const w=window.open('');if(w){w.document.write('<title>Квитанция</title><body style="margin:0;background:#111;display:grid;place-items:center;min-height:100vh"><img src="'+b.src+'" style="max-width:100%;max-height:100vh">')}else location.href=b.src},
+ 'f-cat':b=>{if(F.category===b.dataset.cat)return;const keep={date:F.date,paymentDate:F.paymentDate,paymentCard:F.paymentCard,notes:F.notes,_photoBlob:F._photoBlob,_photoUrl:F._photoUrl};F=Object.assign(newRec(b.dataset.cat,FM.obj),keep);FM.lastCat=b.dataset.cat;prefill();drawForm()},
+ 'f-more':()=>{FM.more=true;drawForm()},
+ 'f-save':()=>saveForm(),
+ 'f-nophoto':()=>{F._photoDel=true;F._photoBlob=null;F._photoUrl=null;drawPhoto()},
+ 'h-cat':b=>{H.cat=b.dataset.cat;render()},
+ 'h-reset':()=>{H.cat='all';H.month='';H.status='all';H.q='';render()},
+ unpaid:()=>{H.status='no';H.cat='all';H.month='';go('hist')},
+ 'a-range':b=>{A.range=b.dataset.r;render()},
+ 'a-cons':b=>{A.cons=b.dataset.cat;render()},
+ theme:b=>{S.theme=b.dataset.v;saveSettings();render()},
+ objs:()=>objsSheet(),
+ 'obj-pick':b=>{S.active=b.dataset.id;saveSettings();closeSheet();render()},
+ 'obj-new':()=>{if(S.objects.length>=1&&needPro())return;objEdit(null)},
+ 'obj-edit':b=>objEdit(b.dataset.id),
+ 'o-preset':b=>{const P=PRESETS[b.dataset.v];E._preset=b.dataset.v;E.currency=P.currency;E.vat=J(P.vat);E.elec=P.elec;E.cats=P.cats.slice();E.names=J(P.names);drawObj()},
+ 'o-emoji':b=>{E.emoji=b.dataset.v;drawObj()},
+ 'o-elec':b=>{E.elec=+b.dataset.v;drawObj()},
+ 'o-up':b=>{const i=E.cats.indexOf(b.dataset.v);if(i>0){E.cats.splice(i,1);E.cats.splice(i-1,0,b.dataset.v);drawObj()}},
+ 'o-ren':b=>{const id=b.dataset.v,c=cat(id,E),n=prompt('Название категории',c.title);if(n==null)return;const t=n.trim();if(t&&t!==(CATS[id]||S.customCats.find(x=>x.id===id)||{}).title)E.names[id]=t;else delete E.names[id];drawObj()},
+ 'o-custom':()=>{const n=(prompt('Название новой категории (например: Парковка)')||'').trim();if(!n)return;
+  const meter=confirm('Есть счётчик с показаниями?\n\nОК — да, считать по показаниям\nОтмена — нет, просто сумма за период');let unit='';if(meter){unit=(prompt('Единица измерения (например: м³, кВт·ч, Гкал)','м³')||'').trim()||'ед.'}
+  const id='c_'+Date.now().toString(36);S.customCats.push({id,title:n,emoji:meter?'📟':'🧾',type:meter?'meter':'fixed',unit,g:PALETTE[S.customCats.length%PALETTE.length]});E.cats.push(id);saveSettings();drawObj()},
+ 'o-save':()=>objSave(),
+ 'o-del':()=>{if(recsOf(E.id).length){alert('В этом объекте есть записи. Удалите их сначала — или оставьте объект.');return}if(!confirm('Удалить объект «'+E.name+'»?'))return;S.objects=S.objects.filter(o=>o.id!==E.id);fixSettings();saveSettings();closeSheet();render()},
+ tariffs:()=>tariffsSheet(),
+ 't-new':()=>tEdit(null),
+ 't-edit':b=>tEdit(+b.dataset.i),
+ 't-save':()=>tSave(),
+ 't-del':()=>{if(!confirm('Удалить этот тариф? Записи, уже внесённые по нему, не изменятся.'))return;rules.splice(T.i,1);if(saveRules()){toast('Тариф удалён');tariffsSheet()}},
+ remind:()=>remindSheet(),
+ 'r-save':()=>{const o=OBJ(),R={};$('sheet').querySelectorAll('[data-r]').forEach(el=>{const v=Math.round(num(el.value));if(v>=1&&v<=31)R[el.dataset.r]=v});o.remind=R;saveSettings();closeSheet();render();toast('Сохранено ✓')},
+ backup:()=>backup(),
+ moveGo:()=>{location.href='perenos.html'},
+ moveLater:()=>{try{LS.set('ku.movedAsk',String(Date.now()))}catch(e){}render()},
+ raw:()=>rawDownload(),
+ imp:()=>{$('fileImport').value='';$('fileImport').click()},
+ 'imp-merge':()=>doImport('merge'),
+ 'imp-replace':()=>doImport('replace'),
+ excel:()=>excel(),
+ snaps:()=>snapsSheet(),
+ 'snap-restore':b=>snapRestore(b.dataset.k),
+ wipe:()=>wipe(),
+ help:()=>helpSheet(),
+ 'ob-p':b=>{OB.name=($('obName')||{}).value||OB.name;OB.p=b.dataset.v;OB.cur=PRESETS[OB.p].currency;onboarding()},
+ 'ob-go':()=>{const name=(($('obName')||{}).value||'').trim()||'Моя квартира',cur=($('obCur')||{}).value||PRESETS[OB.p].currency;S=defaultSettings(OB.p,name,cur);fixSettings();saveSettings();firstRun=false;closeSheet();render();toast('Готово! Внесите первую запись ✓')}
+};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!b.dataset.a)return;const f=ACT[b.dataset.a];if(f){e.preventDefault();f(b,e)}});
+document.addEventListener('input',e=>{const el=e.target;
+ if(el.dataset.k&&F){const v=el.dataset.n?num(el.value):el.value;setK(el.dataset.k,v);const s=el.dataset.src;if(s&&s!=='text'&&s!=='date'){recalc(s);syncForm(el)}return}
+ if(el.dataset.e&&E){if(el.dataset.e==='name')E.name=el.value;else if(el.dataset.e==='vatRate')E.vat.rate=num(el.value);return}
+ if(el.id==='hQ'){H.q=el.value;$('hlist').innerHTML=histList()}});
+document.addEventListener('change',e=>{const el=e.target,a=el.dataset.a2;
+ if(el.dataset.k==='date'&&F){F.date=el.value;if(FM.isNew){applyRates();recalc(cat(F.category,FM.obj).type==='fixed'?'with':'reading');syncForm(null)}return}
+ if(a==='f-paid'){F.paymentDate=el.checked?(F.paymentDate||todayISO()):'';drawForm();return}
+ if(a==='f-obj'){const o=S.objects.find(x=>x.id===el.value);if(!o)return;FM.obj=o;const cid=o.cats.includes(F.category)?F.category:o.cats[0];if(!cid){toast('В этом объекте нет категорий');return}
+  const keep={date:F.date,notes:F.notes,_photoBlob:F._photoBlob,_photoUrl:F._photoUrl};F=Object.assign(newRec(cid,o),keep);prefill();drawForm();return}
+ if(a==='f-photo'){const f=el.files&&el.files[0];if(!f)return;if(!PRO.isPro()){PRO.open();return}
+  compress(f).then(b=>{F._photoBlob=b;F._photoDel=false;F._photoUrl=URL.createObjectURL(b);drawPhoto()}).catch(x=>alert('Фото не добавлено: '+x.message));return}
+ if(a==='o-cat'&&E){const id=el.value;if(el.checked){if(!E.cats.includes(id))E.cats.push(id)}else{if(recsOf(E.id).some(r=>r.category===id)&&!confirm('По этой категории есть записи. Скрыть её? Записи сохранятся и вернутся, если включить категорию снова.')){el.checked=true;return}E.cats=E.cats.filter(x=>x!==id)}drawObj();return}
+ if(el.dataset.e==='currency'&&E){E.currency=el.value;return}
+ if(el.dataset.e==='vatOn'&&E){E.vat.on=el.checked;drawObj();return}
+ if(el.id==='hMonth'){H.month=el.value;$('hlist').innerHTML=histList();return}
+ if(el.id==='hStatus'){H.status=el.value;$('hlist').innerHTML=histList();return}
+ if(el.id==='obCur'){OB.cur=el.value;return}
+ if(el.id==='fileImport'){const f=el.files&&el.files[0];if(f)importFile(f)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('sheet').classList.contains('on')&&!sheetLock)closeSheet()});
+
+/* ---------- запуск ---------- */
+load();applyTheme();
+PRO.init().catch(()=>{}).then(()=>{render();if(firstRun)onboarding();
+ if(location.hash==='#add'){history.replaceState(null,'',location.pathname);openForm({})}});
+/* старый адрес: подсказка о переезде — только когда новый адрес уже открывается */
+if(OLDHOST&&navigator.onLine)fetch(NEWURL+'manifest.webmanifest',{mode:'no-cors',cache:'no-store'}).then(()=>{newLive=true;if(tab==='home')render()}).catch(()=>{});
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+</script>
 </body>
 </html>
