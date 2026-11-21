@@ -1,7 +1,7 @@
 // Коммуналка — учёт коммунальных платежей · © 2026 Елена Кирсанова. Все права защищены.
 // Офлайн-режим: приложение ВСЕГДА открывается из памяти устройства, обновления скачиваются в фоне.
 // Данные пользователя (записи, тарифы, фото) этот файл не трогает.
-const CACHE='kommunal-v1';
+const CACHE='kommunal-v2';
 const SHELL=['./','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./favicon.png'];
 const LIBS=['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'];
 const good=r=>r&&r.ok&&!r.redirected&&(r.type==='basic'||r.type==='cors');

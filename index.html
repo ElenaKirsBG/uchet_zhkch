@@ -242,6 +242,72 @@ window.PRO_CFG={product:6,prefix:'KU1-',ns:'ku',trialDays:7,title:'Коммун�
 <script>
 /* ---------- Доступ PRO: пробный период и ключи доступа с сайта автора ----------
    © 2026 Елена Кирсанова. Все права защищены. */
+/* Пробный период переносится вместе с резервной копией. © Елена Кирсанова
+   В каждую новую копию записывается дата первого запуска с подписью (_ek). При восстановлении
+   пробный период считается с самой ранней даты: из подписи, а для старых копий — по датам в данных.
+   Копия с испорченной подписью считается старой. */
+(function () {
+  var FLOOR = Date.UTC(2026, 10, 1), K = [101, 75, 50, 54, 103, 117, 97, 114, 100, 46, 112, 114, 111];
+  var cfg = null;
+  function hex(b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
+  function sig(app, f) {
+    var e = new TextEncoder();
+    return crypto.subtle.importKey('raw', e.encode(String.fromCharCode.apply(null, K) + '|' + app), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+      .then(function (k) { return crypto.subtle.sign('HMAC', k, e.encode(app + '|' + f)); }).then(function (b) { return hex(b).slice(0, 24); });
+  }
+  /* самая ранняя дата использования в данных: метки времени и даты не раньше 01.11.2026 и не позже сейчас */
+  function dataAge(o) {
+    var now = Date.now() + 864e5, min = 0, seen = 0;
+    (function walk(v, d) {
+      if (d > 12 || seen > 200000) return; seen++;
+      if (typeof v === 'number') { if (v >= FLOOR && v <= now && (!min || v < min)) min = v; return; }
+      if (typeof v === 'string') {
+        if (v.length > 40 || !/^\d{4}-\d{2}-\d{2}/.test(v)) return;
+        var t = Date.parse(v.length === 10 ? v + 'T12:00:00Z' : v); if (t >= FLOOR && t <= now && (!min || t < min)) min = t; return;
+      }
+      if (v && typeof v === 'object') { if (Array.isArray(v)) { for (var i = 0; i < v.length; i++) walk(v[i], d + 1); } else for (var k in v) if (k !== '_ek') walk(v[k], d + 1); }
+    })(o, 0);
+    return min;
+  }
+  var EKG = window.EKG = {
+    /* cfg: { app, get(): Promise<number>|number, set(ts), apply(ts) — обновить пробный период в работающем приложении, licensed(): bool } */
+    init: function (c) { cfg = c; EKG.refresh(); },
+    /* готовая подпись для копий, которые сохраняются без ожидания (копирование в буфер и т. п.) */
+    ek: null,
+    refresh: function () { try { EKG.start().then(function (f) { return sig(cfg.app, f).then(function (s) { EKG.ek = { a: cfg.app, f: f, s: s }; }); }).catch(function () {}); } catch (e) {} },
+    stampSync: function (obj) { if (EKG.ek && obj && typeof obj === 'object') obj._ek = EKG.ek; return obj; },
+    start: function () { return Promise.resolve(cfg.get()).then(function (t) { return +t || Date.now(); }); },
+    /* добавить в объект копии дату первого запуска с подписью */
+    stamp: function (obj) {
+      if (!cfg || !obj || typeof obj !== 'object') return Promise.resolve(obj);
+      return EKG.start().then(function (f) { return sig(cfg.app, f).then(function (s) { obj._ek = { a: cfg.app, f: f, s: s }; return obj; }); }).catch(function () { return obj; });
+    },
+    /* учесть восстанавливаемую копию: пробный период начинается с самой ранней даты */
+    absorb: function (obj) {
+      if (!cfg || !obj || typeof obj !== 'object') return Promise.resolve(false);
+      var ek = obj._ek;
+      var from = ek && typeof ek === 'object'
+        ? sig(cfg.app, +ek.f).then(function (s) { return s === ek.s && +ek.f > 0 ? +ek.f : 1; }, function () { return 0; })
+        : Promise.resolve(dataAge(obj));
+      return Promise.all([from, EKG.start()]).then(function (r) {
+        var f = r[0], cur = r[1];
+        if (!f || f >= cur) return false;
+        return Promise.resolve(cfg.set(f)).then(function () {
+          try { cfg.apply && cfg.apply(f); } catch (e) {}
+          EKG.refresh();
+          var lic = false; try { lic = !!(cfg.licensed && cfg.licensed()); } catch (e) {}
+          var days = cfg.days || 7, end = f + days * 864e5;
+          if (!lic && end < Date.now()) setTimeout(function () {
+            alert('Пробный период переносится вместе с резервной копией.\n\n' + (f > 1 ? 'Эта копия сделана в приложении, которым пользуются с ' + new Date(f).toLocaleDateString('ru-RU') + ', поэтому' : 'Поэтому') +
+              ' пробный период уже закончился. Данные восстановлены; чтобы снова открыть все функции, активируйте ключ доступа PRO.');
+          }, 600);
+          return true;
+        });
+      }).catch(function () { return false; });
+    },
+    _dataAge: dataAge, _sig: sig
+  };
+})();
 const PRO=(()=>{
 const C=window.PRO_CFG;
 const REVOKE_URL='https://elenakirsanova.com/api/shop/revoked';
@@ -334,6 +400,7 @@ function close(){if(ov)ov.classList.remove('on')}
 function cardHTML(){return`<div class="pro-card"><div class="pro-s">⭐ ${e(status())}</div>
  ${licOk()?`<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="pro-b sec" style="flex:1" href="${C.shop}" target="_blank" rel="noopener">Сайт автора</a><button class="pro-b sec" style="flex:1" data-pro="del">Удалить ключ</button></div>`
  :`<div class="pro-n" style="margin-top:6px">После оплаты на сайте вы сразу получите ключ (он начинается с ${C.prefix}). Вставьте его сюда — интернет для проверки не нужен.</div><a class="pro-b" href="${C.shop}" target="_blank" rel="noopener">${e(C.buyText||'Купить доступ')}</a>${keyBox('proKeyC')}`}</div>`}
+if(window.EKG)EKG.init({app:C.ns,days:C.trialDays||7,get:()=>+ls.get('trial'),set:t=>ls.set('trial',String(t)),apply:t=>{L.trialEnd=t+(C.trialDays||7)*864e5;try{window.dispatchEvent(new Event('ek-pro'))}catch(e){}},licensed:()=>licOk()});
 return{init,isPro,open,close,cardHTML,status,mount,trialOn,left,licOk}})();
 </script>
 <script>
@@ -819,7 +886,7 @@ async function saveFile(blob,name){let f=null;try{f=new File([blob],name,{type:b
  const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},4000);return'download'}
 async function backup(){toast('Готовлю копию…');const photos={};
  for(const r of records){if(r&&r.photoId&&!photos[r.photoId]){try{const b=await DB.get('photos',r.photoId);if(b)photos[r.photoId]=await blobToURL(b)}catch(e){}}}
- const data={app:'kommunal',format:2,version:VERSION,date:new Date().toISOString(),records,tariffRules:rulesVirtual?[]:rules,settings:S,photos};
+ const data={app:'kommunal',format:2,version:VERSION,date:new Date().toISOString(),records,tariffRules:rulesVirtual?[]:rules,settings:S,photos};if(window.EKG)await EKG.stamp(data);
  const res=await saveFile(new Blob([JSON.stringify(data)],{type:'application/json'}),'kommunalka-kopiya-'+todayISO()+'.json');
  if(res!=='cancel'){try{LS.set('ku.lastBackup',String(Date.now()))}catch(e){}render();toast(res==='download'?'Копия сохранена в «Загрузки» ✓':'Копия готова ✓')}}
 function rawDownload(){saveFile(new Blob([JSON.stringify({records_raw:LS.get(K_REC),tariffs_raw:LS.get(K_TAR),date:new Date().toISOString()},null,1)],{type:'application/json'}),'kommunalka-syrye-dannye-'+todayISO()+'.json')}
@@ -828,7 +895,7 @@ async function importFile(file){let d;try{d=JSON.parse(await file.text())}catch(
  let rec=null,tar=null,set=null,ph={};
  if(Array.isArray(d))rec=d;else if(d&&Array.isArray(d.records)){rec=d.records;if(Array.isArray(d.tariffRules))tar=d.tariffRules;if(d.settings&&Array.isArray(d.settings.objects)&&d.settings.objects.length)set=d.settings;ph=d.photos&&typeof d.photos==='object'?d.photos:{}}
  else{alert('Неверный формат файла: в нём нет записей приложения.');return}
- rec=rec.filter(valid);IMP={rec,tar,set,ph};
+ rec=rec.filter(valid);IMP={rec,tar,set,ph,raw:Array.isArray(d)?{records:d}:Object.assign({},d,{photos:null})};
  sheet(shh('Восстановить из копии')+`<div class="ban info"><span class="bi">📂</span><div><b>${esc(file.name)}</b>${plural(rec.length,'запись','записи','записей')}${tar?' · '+plural(tar.length,'тариф','тарифа','тарифов'):''}${Object.keys(ph).length?' · '+plural(Object.keys(ph).length,'фото','фото','фото'):''}</div></div>
   <div class="mut small">Перед восстановлением текущие данные сохранятся в автокопию — их можно будет вернуть.</div>
   ${records.length&&!locked?`<button class="btn" data-a="imp-merge">Добавить к текущим записям</button><div class="mut small" style="margin-top:4px">Совпадающие записи не дублируются.</div>`:''}
@@ -836,6 +903,7 @@ async function importFile(file){let d;try{d=JSON.parse(await file.text())}catch(
 async function doImport(mode){const{rec,tar,set,ph}=IMP;
  if(mode==='replace'&&records.length&&!confirm('Заменить все текущие записи данными из файла? Текущие сохранятся в автокопию.'))return;
  await snapshot('Перед восстановлением '+new Date().toLocaleString('ru-RU'));
+ if(window.EKG&&IMP.raw)await EKG.absorb(IMP.raw);
  for(const[id,u]of Object.entries(ph)){try{const b=urlToBlob(u);if(b)await DB.put('photos',id,b)}catch(e){}}
  if(mode==='replace'){records=rec;if(tar){rules=tar;rulesVirtual=false}if(set)S=set}
  else{const ids=new Set(records.map(r=>r&&r.id));rec.forEach(r=>{if(!ids.has(r.id))records.push(r)});
